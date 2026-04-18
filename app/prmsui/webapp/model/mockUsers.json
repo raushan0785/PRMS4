@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "username": "emp01",
+      "password": "welcome123",
+      "fullName": "Aarav Mehta",
+      "role": "Employee",
+      "employeeId": "11111111-1111-1111-1111-111111111111",
+      "teamMemberIds": []
+    },
+    {
+      "username": "mgr01",
+      "password": "welcome123",
+      "fullName": "Neha Sharma",
+      "role": "Manager",
+      "employeeId": "22222222-2222-2222-2222-222222222222",
+      "teamMemberIds": [
+        "11111111-1111-1111-1111-111111111111"
+      ]
+    },
+    {
+      "username": "hr01",
+      "password": "welcome123",
+      "fullName": "Rohan Iyer",
+      "role": "HR",
+      "employeeId": "33333333-3333-3333-3333-333333333333",
+      "teamMemberIds": []
+    }
+  ]
+}

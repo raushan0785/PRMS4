@@ -1,0 +1,33 @@
+.prmsLoginPage {
+  background: linear-gradient(145deg, #f7f9fc 0%, #eaf2fb 100%);
+}
+
+.prmsLoginShell {
+  width: 100%;
+  max-width: 30rem;
+  padding: 1rem;
+}
+
+.prmsLoginCard {
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.08);
+}
+
+.prmsDashboardPage .sapFDynamicPageContent,
+.prmsDashboardPage .sapFDynamicPageHeader {
+  background: #f8fafc;
+}
+
+.prmsCycleBanner {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(90deg, #e0f2fe 0%, #f0fdf4 100%);
+  border: 1px solid #bae6fd;
+}
+
+.prmsSectionToolbar {
+  border-radius: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+}

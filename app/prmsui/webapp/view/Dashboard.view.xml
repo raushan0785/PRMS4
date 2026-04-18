@@ -1,0 +1,431 @@
+<mvc:View
+  controllerName="prmsui.controller.Dashboard"
+  displayBlock="true"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.f"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:mvc="sap.ui.core.mvc">
+  <Page showHeader="false" class="prmsDashboardPage">
+    <content>
+      <f:DynamicPage toggleHeaderOnTitleClick="false" fitContent="true">
+        <f:title>
+          <f:DynamicPageTitle>
+        <f:heading>
+          <Title text="PRMS Dashboard" level="H2" />
+        </f:heading>
+        <f:expandedContent>
+          <VBox>
+            <Text text="Performance &amp; Review Management System" />
+            <ObjectStatus text="{= 'Logged in as ' + ${session>/fullName} + ' • ' + ${session>/role} }" state="Information" />
+          </VBox>
+        </f:expandedContent>
+        <f:actions>
+          <Button text="➕ Create Goal" type="Emphasized" visible="{session>/isEmployee}" press=".onToggleGoalForm" />
+          <Button text="Logout" icon="sap-icon://log" press=".onLogout" />
+        </f:actions>
+      </f:DynamicPageTitle>
+    </f:title>
+
+    <f:header>
+      <f:DynamicPageHeader pinnable="false">
+        <HBox class="prmsCycleBanner" alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap">
+          <HBox alignItems="Center">
+            <core:Icon src="sap-icon://calendar" size="1.3rem" class="sapUiTinyMarginEnd" />
+            <VBox>
+              <Title text="📅 Appraisal Cycle" level="H4" />
+              <Text text="{session>/appraisalCycle}" />
+            </VBox>
+          </HBox>
+          <ObjectStatus text="{= ${session>/role} + ' Access' }" state="Success" />
+        </HBox>
+      </f:DynamicPageHeader>
+    </f:header>
+
+    <f:content>
+      <VBox class="sapUiContentPadding">
+        <MessageStrip text="{dashboard>/loadError}" type="Error" showCloseButton="true" visible="{= !!${dashboard>/loadError}}" class="sapUiSmallMarginBottom" />
+        
+        <Toolbar class="sapUiSmallMarginBottom prmsSectionToolbar">
+          <core:Icon src="sap-icon://business-objects-experience" size="1rem" />
+          <Title text="📈 Performance Dashboard" level="H4" class="sapUiTinyMarginBegin" />
+          <ToolbarSpacer />
+          <BusyIndicator visible="{dashboard>/busy}" size="1rem" />
+        </Toolbar>
+
+        <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+          <GenericTile header="Total Goals" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <tileContent>
+              <TileContent footer="Visible in current role scope">
+                <content>
+                  <NumericContent value="{dashboard>/stats/totalGoals}" valueColor="Neutral" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+          <GenericTile header="Completed Goals" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <tileContent>
+              <TileContent footer="Completed in scope">
+                <content>
+                  <NumericContent value="{dashboard>/stats/completedGoals}" valueColor="Good" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+          <GenericTile header="Average Rating" class="sapUiTinyMarginBottom" frameType="TwoByOne">
+            <tileContent>
+              <TileContent footer="Latest appraisal signal">
+                <content>
+                  <!-- FIX: changed unit to scale -->
+                  <NumericContent value="{dashboard>/stats/averageRating}" scale="/5" valueColor="Critical" />
+                </content>
+              </TileContent>
+            </tileContent>
+          </GenericTile>
+        </HBox>
+
+        <!-- Performance Charts Section -->
+        <Panel headerText="📊 Performance Analytics" class="sapUiSmallMarginBottom" visible="{session>/isHRAdmin}">
+          <VBox class="sapUiMediumMargin">
+            <Toolbar class="sapUiTinyMarginBottom">
+              <Button text="📈 View Analytics" press=".onViewAnalytics" />
+              <Button text="📊 Performance Trends" press=".onPlaceholderAction" class="sapUiTinyMarginBegin" />
+            </Toolbar>
+            <HBox wrap="Wrap" class="sapUiSmallMarginBottom">
+              <GenericTile header="Completion Rate" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+                <tileContent>
+                  <TileContent footer="Goal completion percentage">
+                    <content>
+                      <!-- FIX: use pre-computed value from controller; unit -> scale -->
+                      <NumericContent value="{dashboard>/stats/completionRate}" scale="%" valueColor="Good" />
+                    </content>
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile header="Assessment Coverage" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+                <tileContent>
+                  <TileContent footer="Finalized assessments">
+                    <content>
+                      <!-- FIX: use pre-computed value from controller instead of .filter() in expression -->
+                      <NumericContent value="{dashboard>/stats/finalizedAssessments}" valueColor="Neutral" />
+                    </content>
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+              <GenericTile header="Team Size" class="sapUiTinyMarginBottom" frameType="TwoByOne">
+                <tileContent>
+                  <TileContent footer="Active employees">
+                    <content>
+                      <!-- FIX: use pre-computed value from controller instead of .length on array in expression -->
+                      <NumericContent value="{dashboard>/stats/totalEmployees}" valueColor="Information" />
+                    </content>
+                  </TileContent>
+                </tileContent>
+              </GenericTile>
+            </HBox>
+          </VBox>
+        </Panel>
+
+        <Panel visible="{session>/isEmployee}" headerText="🎯 Employee Workspace" class="sapUiSmallMarginBottom">
+          <VBox class="sapUiMediumMargin">
+            <Text text="Manage your goals, check-ins, self-assessment, and final rating from one place." class="sapUiTinyMarginBottom" />
+            <Panel visible="{dashboard>/showGoalForm}" headerText="➕ Create Goal" class="sapUiSmallMarginBottom">
+              <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                <Label text="Goal Title" />
+                <Input value="{dashboard>/goalDraft/title}" />
+                <Label text="Goal Type" />
+                <Select selectedKey="{dashboard>/goalDraft/type}">
+                  <core:Item key="Performance" text="Performance" />
+                  <core:Item key="Development" text="Development" />
+                </Select>
+                <Label text="OKR Mapping" />
+                <Select selectedKey="{dashboard>/goalDraft/okr_ID}" items="{dashboard>/okrs}">
+                  <core:Item key="{dashboard>ID}" text="{dashboard>title}" />
+                </Select>
+                <Label text="Progress" />
+                <StepInput value="{dashboard>/goalDraft/progress}" min="0" max="100" step="5" />
+                <Label text="Status" />
+                <Select selectedKey="{dashboard>/goalDraft/status}">
+                  <core:Item key="Open" text="Open" />
+                  <core:Item key="In Progress" text="In Progress" />
+                  <core:Item key="Completed" text="Completed" />
+                </Select>
+              </form:SimpleForm>
+              <Toolbar>
+                <ToolbarSpacer />
+                <Button text="Cancel" press=".onCancelGoal" />
+                <Button text="Save Goal" type="Emphasized" press=".onCreateGoal" />
+              </Toolbar>
+            </Panel>
+            <Toolbar class="sapUiTinyMarginBottom">
+              <core:Icon src="sap-icon://activate" size="1rem" />
+              <Title text="🤖 AI Goal Generator" level="H5" class="sapUiTinyMarginBegin" />
+              <ToolbarSpacer />
+              <Button text="Generate Goals" type="Emphasized" press=".onGenerateGoals" visible="{session>/isEmployee}" />
+            </Toolbar>
+            <Text text="{dashboard>/generationMessage}" visible="{= !!${dashboard>/generationMessage} }" class="sapUiTinyMarginBottom" />
+            <Panel headerText="Generated Goals" class="sapUiSmallMarginBottom">
+              <Table items="{dashboard>/generatedGoals}" noDataText="Generate goals to see new recommendations." growing="true">
+                <columns>
+                  <Column><Text text="Goal Title" /></Column>
+                  <Column><Text text="Type" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>title}" />
+                      <ObjectStatus text="{dashboard>type}" state="{= ${dashboard>type} === 'Performance' ? 'Information' : 'Success' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+            <Panel headerText="My Goals" class="sapUiSmallMarginBottom">
+              <Table items="{dashboard>/myGoals}" growing="true">
+                <columns>
+                  <Column><Text text="Title" /></Column>
+                  <Column><Text text="Type" /></Column>
+                  <Column><Text text="Status" /></Column>
+                  <Column hAlign="End"><Text text="Progress" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>title}" />
+                      <Text text="{dashboard>type}" />
+                      <ObjectStatus text="{dashboard>status}" state="{= ${dashboard>status} === 'Completed' ? 'Success' : 'Information' }" />
+                      <ProgressIndicator percentValue="{dashboard>progress}" displayValue="{= ${dashboard>progress} + '%' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+            <Panel headerText="Company OKRs" class="sapUiSmallMarginBottom">
+              <Table items="{dashboard>/okrs}" growing="true">
+                <columns>
+                  <Column><Text text="OKR" /></Column>
+                  <Column><Text text="Description" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>title}" />
+                      <Text text="{dashboard>description}" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+            <Panel headerText="My Appraisal Actions">
+              <VBox class="sapUiMediumMargin">
+                <Panel visible="{dashboard>/showCheckInForm}" headerText="📝 Quarterly Check-In" class="sapUiSmallMarginBottom">
+                  <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                    <Label text="Goal" />
+                    <Text text="{dashboard>/checkInDraft/goalTitle}" />
+                    <Label text="Current Progress" />
+                    <StepInput value="{dashboard>/checkInDraft/progress}" min="0" max="100" step="5" />
+                    <Label text="Status" />
+                    <Select selectedKey="{dashboard>/checkInDraft/status}">
+                      <core:Item key="Open" text="Open" />
+                      <core:Item key="In Progress" text="In Progress" />
+                      <core:Item key="Completed" text="Completed" />
+                    </Select>
+                    <Label text="Check-In Notes" />
+                    <TextArea value="{dashboard>/checkInDraft/notes}" rows="4" placeholder="Describe progress, blockers, and achievements..." />
+                  </form:SimpleForm>
+                  <Toolbar>
+                    <ToolbarSpacer />
+                    <Button text="Cancel" press=".onCancelCheckIn" />
+                    <Button text="Submit Check-In" type="Emphasized" press=".onCreateCheckIn" />
+                  </Toolbar>
+                </Panel>
+                <CustomListItem>
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+                    <Text text="Submit Quarterly Check-In" />
+                    <Button text="Open" visible="{= !${dashboard>/showCheckInForm} }" press=".onAddCheckIn" />
+                  </HBox>
+                </CustomListItem>
+                <CustomListItem>
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+                    <Text text="View Final Rating" />
+                    <ObjectStatus text="{dashboard>/finalRatingText}" state="{= ${dashboard>/finalRatingText}.indexOf('Finalized') !== -1 ? 'Success' : 'Information' }" />
+                  </HBox>
+                </CustomListItem>
+                <CustomListItem>
+                  <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+                    <Text text="Self Assessment" />
+                    <!-- FIX: use pre-computed flag from controller instead of .length in expression -->
+                    <Button text="Rate Yourself" press=".onSelfAssessment" visible="{dashboard>/stats/hasNoAssessment}" />
+                  </HBox>
+                </CustomListItem>
+              </VBox>
+            </Panel>
+            <!-- FIX: use pre-computed flag from controller instead of .length > 0 in expression -->
+            <Panel headerText="📋 Recent Check-Ins" class="sapUiSmallMarginBottom" visible="{dashboard>/stats/hasCheckIns}">
+              <Table items="{dashboard>/checkIns}" growing="true">
+                <columns>
+                  <Column><Text text="Date" /></Column>
+                  <Column><Text text="Status" /></Column>
+                  <Column><Text text="Progress" /></Column>
+                  <Column><Text text="Notes" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>checkInDate}" />
+                      <ObjectStatus text="{dashboard>status}" state="{= ${dashboard>status} === 'Completed' ? 'Success' : 'Information' }" />
+                      <ProgressIndicator percentValue="{dashboard>progress}" displayValue="{= ${dashboard>progress} + '%' }" />
+                      <Text text="{dashboard>notes}" wrapping="true" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+          </VBox>
+        </Panel>
+
+        <Panel visible="{session>/isManager}" headerText="👥 Team Review &amp; Assessment" class="sapUiSmallMarginBottom">
+          <VBox class="sapUiMediumMargin">
+            <Text text="Review team goals, provide quarterly feedback, and finalize ratings for your team." class="sapUiTinyMarginBottom" />
+            <Toolbar class="sapUiTinyMarginBottom">
+              <Button text="Create Assessment" icon="sap-icon://add" press=".onCreateAssessment" />
+              <Button text="View Team Check-Ins" press=".onViewTeamCheckIns" class="sapUiTinyMarginBegin" />
+              <Button text="Finalize Ratings" press=".onFinalizeAllRatings" class="sapUiTinyMarginBegin" />
+            </Toolbar>
+            <Panel headerText="Team Goals" class="sapUiSmallMarginBottom">
+              <Table items="{dashboard>/teamGoals}" growing="true" noDataText="No team members or goals assigned.">
+                <columns>
+                  <Column><Text text="Employee" /></Column>
+                  <Column><Text text="Goal" /></Column>
+                  <Column><Text text="Type" /></Column>
+                  <Column><Text text="Status" /></Column>
+                  <Column hAlign="End"><Text text="Progress" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>employeeName}" />
+                      <Text text="{dashboard>title}" />
+                      <Text text="{dashboard>type}" />
+                      <Select selectedKey="{dashboard>status}" change=".onUpdateGoalStatus" visible="{session>/isManager}">
+                        <core:Item key="Open" text="Open" />
+                        <core:Item key="In Progress" text="In Progress" />
+                        <core:Item key="Completed" text="Completed" />
+                      </Select>
+                      <ProgressIndicator percentValue="{dashboard>progress}" displayValue="{= ${dashboard>progress} + '%' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+            <!-- FIX: use pre-computed flag from controller instead of .length > 0 in expression -->
+            <Panel headerText="Team Assessments" class="sapUiSmallMarginBottom" visible="{dashboard>/stats/hasAssessments}">
+              <Table items="{dashboard>/assessments}" growing="true">
+                <columns>
+                  <Column><Text text="Employee" /></Column>
+                  <Column><Text text="Manager Rating" /></Column>
+                  <Column><Text text="Self Rating" /></Column>
+                  <Column><Text text="Final Rating" /></Column>
+                  <Column><Text text="Status" /></Column>
+                  <Column><Text text="Action" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>employeeName}" />
+                      <RatingIndicator value="{dashboard>managerRating}" maxValue="5" change=".onUpdateAssessmentRating" />
+                      <Text text="{= ${dashboard>selfRating} ? ${dashboard>selfRating} + '/5' : 'Pending' }" />
+                      <Text text="{= ${dashboard>finalRating} ? ${dashboard>finalRating} + '/5' : 'Pending' }" />
+                      <ObjectStatus text="{dashboard>finalStatus}" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                      <Button text="Finalize" press=".onFinalizeAssessment" enabled="{= ${dashboard>finalStatus} !== 'Finalized' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+          </VBox>
+        </Panel>
+
+        <Panel visible="{session>/isHRAdmin}" headerText="🔧 HR / Admin Control Center" class="sapUiSmallMarginBottom">
+          <VBox class="sapUiMediumMargin">
+            <Text text="Manage the appraisal cycle, review organization-wide performance, and prepare exports." class="sapUiTinyMarginBottom" />
+            <Toolbar class="sapUiTinyMarginBottom">
+              <Button text="👤 Create Employee" press=".onCreateEmployee" />
+              <Button text="📋 View All Assessments" press=".onViewAllAssessments" class="sapUiTinyMarginBegin" />
+              <Button text="📈 Generate Reports" press=".onGenerateReports" class="sapUiTinyMarginBegin" />
+              <Button text="⚙️ Manage Cycles" press=".onManageCycles" class="sapUiTinyMarginBegin" />
+              <Button text="💾 Export Data" press=".onExportData" class="sapUiTinyMarginBegin" />
+            </Toolbar>
+
+            <!-- Employee Creation Form -->
+            <Panel visible="{dashboard>/showEmployeeForm}" headerText="👤 Create New Employee" class="sapUiSmallMarginBottom">
+              <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                <Label text="Employee Name" />
+                <Input value="{dashboard>/employeeDraft/name}" />
+                <Label text="Username" />
+                <Input value="{dashboard>/employeeDraft/username}" />
+                <Label text="Role" />
+                <Select selectedKey="{dashboard>/employeeDraft/role}">
+                  <core:Item key="Employee" text="Employee" />
+                  <core:Item key="Manager" text="Manager" />
+                  <core:Item key="HR" text="HR" />
+                </Select>
+              </form:SimpleForm>
+              <Toolbar>
+                <Button text="Save" type="Emphasized" press=".onSaveEmployee" />
+                <Button text="Cancel" press=".onCancelEmployee" class="sapUiTinyMarginBegin" />
+              </Toolbar>
+            </Panel>
+            <Panel headerText="Organization Goals Overview" class="sapUiSmallMarginBottom">
+              <Table items="{dashboard>/orgGoals}" growing="true">
+                <columns>
+                  <Column><Text text="Employee" /></Column>
+                  <Column><Text text="Goal" /></Column>
+                  <Column><Text text="Type" /></Column>
+                  <Column><Text text="Status" /></Column>
+                  <Column hAlign="End"><Text text="Progress" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>employeeName}" />
+                      <Text text="{dashboard>title}" />
+                      <Text text="{dashboard>type}" />
+                      <ObjectStatus text="{dashboard>status}" state="{= ${dashboard>status} === 'Completed' ? 'Success' : 'Information' }" />
+                      <ProgressIndicator percentValue="{dashboard>progress}" displayValue="{= ${dashboard>progress} + '%' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+            <!-- FIX: use pre-computed flag from controller instead of .length > 0 in expression -->
+            <Panel headerText="All Assessments Overview" class="sapUiSmallMarginBottom" visible="{dashboard>/stats/hasAssessments}">
+              <Table items="{dashboard>/assessments}" growing="true">
+                <columns>
+                  <Column><Text text="Employee" /></Column>
+                  <Column><Text text="Manager Rating" /></Column>
+                  <Column><Text text="Self Rating" /></Column>
+                  <Column><Text text="Final Rating" /></Column>
+                  <Column><Text text="Status" /></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{dashboard>employeeName}" />
+                      <RatingIndicator value="{dashboard>managerRating}" maxValue="5" enabled="false" />
+                      <RatingIndicator value="{dashboard>selfRating}" maxValue="5" enabled="false" />
+                      <RatingIndicator value="{dashboard>finalRating}" maxValue="5" enabled="false" />
+                      <ObjectStatus text="{dashboard>finalStatus}" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </Panel>
+          </VBox>
+        </Panel>
+      </VBox>
+    </f:content>
+  </f:DynamicPage>
+    </content>
+  </Page>
+</mvc:View>

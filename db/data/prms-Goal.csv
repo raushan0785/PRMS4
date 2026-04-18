@@ -1,0 +1,4 @@
+ID,title,type,status,progress,employee_ID,okr_ID
+bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1,Improve sprint predictability,Performance,In Progress,70,11111111-1111-1111-1111-111111111111,aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1
+bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2,Complete CAP advanced training,Development,Completed,100,11111111-1111-1111-1111-111111111111,aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2
+bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3,Launch mentoring circle,Development,Open,30,22222222-2222-2222-2222-222222222222,aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2

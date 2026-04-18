@@ -1,0 +1,44 @@
+<mvc:View
+  controllerName="prmsui.controller.Login"
+  displayBlock="true"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <Page showHeader="false" class="prmsLoginPage">
+    <content>
+      <FlexBox alignItems="Center" justifyContent="Center" height="100%">
+        <VBox class="prmsLoginShell" renderType="Bare">
+          <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+            <core:Icon src="sap-icon://employee" size="2rem" class="sapUiTinyMarginEnd" />
+            <VBox>
+              <Title text="PRMS Login" level="H2" />
+              <Text text="Performance &amp; Review Management System" />
+            </VBox>
+          </HBox>
+
+          <Panel class="prmsLoginCard" headerText="Sign In">
+            <VBox class="sapUiMediumMargin">
+              <Text text="Choose a demo enterprise user and sign in to access the role-specific dashboard." class="sapUiSmallMarginBottom" />
+
+              <Label text="User" />
+              <ComboBox selectedKey="{login>/username}" items="{users>/users}" width="100%" class="sapUiTinyMarginBottom">
+                <core:Item key="{users>username}" text="{= ${users>fullName} + ' (' + ${users>role} + ')' }" />
+              </ComboBox>
+
+              <Label text="Password" />
+              <Input value="{login>/password}" type="Password" width="100%" class="sapUiTinyMarginBottom" />
+
+              <Button text="Login" type="Emphasized" press=".onLogin" class="sapUiSmallMarginTop" />
+
+              <MessageStrip
+                class="sapUiMediumMarginTop"
+                type="Information"
+                showIcon="true"
+                text="Demo users: emp01 / welcome123, mgr01 / welcome123, hr01 / welcome123" />
+            </VBox>
+          </Panel>
+        </VBox>
+      </FlexBox>
+    </content>
+  </Page>
+</mvc:View>

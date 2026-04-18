@@ -2,7 +2,8 @@
   "name": "prms",
   "version": "1.0.0",
   "dependencies": {
-    "@sap/cds": "^9"
+    "@sap/cds": "^9",
+    "axios": "^1.15.0"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2"
@@ -10,5 +11,6 @@
   "scripts": {
     "start": "cds-serve"
   },
-  "private": true
+  "private": true,
+  "sapux": []
 }
