@@ -3,17 +3,36 @@ namespace prms;
 using { cuid } from '@sap/cds/common';
 
 entity Employee : cuid {
-  name : String(111);
-  role : String(20) enum {
+  name        : String(111);
+  role        : String(20) enum {
     Employee;
     Manager;
     HR;
   };
+  manager_ID  : UUID;
+  manager     : Association to Employee on manager.ID = $self.manager_ID;
 }
 
 entity OKR : cuid {
   title       : String(150);
   description : String(1000);
+}
+
+entity AppraisalCycle : cuid {
+  year        : Integer;
+  quarter     : String(2) enum {
+    Q1;
+    Q2;
+    Q3;
+    Q4;
+  };
+  status      : String(20) enum {
+    Open;
+    Closed;
+  };
+  goalsOpen   : Boolean default true;
+  checkInOpen : Boolean default true;
+  isCurrent   : Boolean default true;
 }
 
 entity Goal : cuid {
@@ -25,12 +44,21 @@ entity Goal : cuid {
   };
   status      : String(30);
   progress    : Integer;
+  submissionStatus : String(20) enum {
+    Draft;
+    Submitted;
+    Approved;
+    Rejected;
+  } default 'Draft';
+  managerComment   : String(1000);
 
   employee_ID : UUID;
   okr_ID      : UUID;
+  cycle_ID    : UUID;
 
   employee    : Association to Employee on employee.ID = $self.employee_ID;
   okr         : Association to OKR on okr.ID = $self.okr_ID;
+  cycle       : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
 }
 
 annotate Goal with @(
@@ -139,18 +167,30 @@ entity CheckIn : cuid {
   status        : String(30);
   comments      : String(1000);
   notes         : String(1000);
+  focusArea     : String(30) enum {
+    Delivery;
+    Collaboration;
+    Learning;
+    Quality;
+  };
+  selfRating    : Integer;
   progress      : Integer;
   checkInDate   : DateTime;
+  employeeAcknowledged : Boolean default false;
+  resubmittedOnce      : Boolean default false;
 
   goal_ID       : UUID;
   employee_ID   : UUID;
+  cycle_ID      : UUID;
 
   goal          : Association to Goal on goal.ID = $self.goal_ID;
   employee      : Association to Employee on employee.ID = $self.employee_ID;
+  cycle         : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
 }
 
 entity Assessment : cuid {
   employee_ID     : UUID;
+  cycle_ID        : UUID;
   assessmentType  : String(20);
   selfRating      : Integer;
   managerRating   : Integer;
@@ -164,4 +204,5 @@ entity Assessment : cuid {
   };
 
   employee        : Association to Employee on employee.ID = $self.employee_ID;
+  cycle           : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
 }

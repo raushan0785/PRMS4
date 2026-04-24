@@ -85,6 +85,21 @@
           "target": "login"
         },
         {
+          "name": "employee",
+          "pattern": "employee",
+          "target": "employee"
+        },
+        {
+          "name": "manager",
+          "pattern": "manager",
+          "target": "manager"
+        },
+        {
+          "name": "hr",
+          "pattern": "hr",
+          "target": "hr"
+        },
+        {
           "name": "dashboard",
           "pattern": "dashboard",
           "target": "dashboard"
@@ -93,6 +108,15 @@
       "targets": {
         "login": {
           "viewName": "Login"
+        },
+        "employee": {
+          "viewName": "Employee"
+        },
+        "manager": {
+          "viewName": "Manager"
+        },
+        "hr": {
+          "viewName": "HR"
         },
         "dashboard": {
           "viewName": "Dashboard"

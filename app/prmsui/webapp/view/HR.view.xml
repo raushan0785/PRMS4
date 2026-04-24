@@ -1,0 +1,130 @@
+<mvc:View
+  controllerName="prmsui.controller.HR"
+  displayBlock="true"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:mvc="sap.ui.core.mvc">
+  <Page title="HR Workspace" class="sapUiContentPadding">
+    <headerContent>
+      <ObjectStatus text="{session>/fullName}" state="Information" />
+      <Button text="Logout" press=".onLogout" />
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Panel headerText="Appraisal Cycle Control" class="sapUiSmallMarginBottom">
+          <HBox justifyContent="SpaceBetween" wrap="Wrap">
+            <VBox>
+              <Title text="{view>/cycleText}" level="H4" />
+              <Select selectedKey="{view>/selectedCycleId}" change=".onCycleChange" items="{view>/cycles}" width="14rem" class="sapUiTinyMarginTop">
+                <core:Item key="{view>ID}" text="{= ${view>year} + ' - ' + ${view>quarter} }" />
+              </Select>
+              <Text text="{= 'Status: ' + (${view>/cycle/status} || 'N/A') }" />
+              <Text text="{= 'Check-ins: ' + (${view>/cycle/checkInOpen} ? 'Open' : 'Closed') }" />
+            </VBox>
+            <VBox>
+              <Button text="Open / Close Appraisal Cycle" press=".onToggleCycleStatus" />
+              <Button text="Open / Close Quarterly Check-Ins" press=".onToggleCheckInWindow" class="sapUiTinyMarginTop" />
+            </VBox>
+          </HBox>
+        </Panel>
+
+        <Panel headerText="Create Employee" class="sapUiSmallMarginBottom">
+          <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Label text="Name" />
+            <Input value="{view>/employeeDraft/name}" />
+            <Label text="Role" />
+            <Select selectedKey="{view>/employeeDraft/role}">
+              <core:Item key="Employee" text="Employee" />
+              <core:Item key="Manager" text="Manager" />
+              <core:Item key="HR" text="HR" />
+            </Select>
+            <Label text="Manager" />
+            <Select selectedKey="{view>/employeeDraft/manager_ID}" items="{view>/managers}">
+              <core:Item key="{view>ID}" text="{view>name}" />
+            </Select>
+          </form:SimpleForm>
+          <Toolbar>
+            <Button text="Create Employee" type="Emphasized" press=".onCreateEmployee" />
+          </Toolbar>
+        </Panel>
+
+        <Panel headerText="Employees &amp; Managers" class="sapUiSmallMarginBottom">
+          <Table items="{view>/employees}">
+            <columns>
+              <Column><Text text="Name" /></Column>
+              <Column><Text text="Role" /></Column>
+              <Column><Text text="Manager ID" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>name}" />
+                  <Text text="{view>role}" />
+                  <Text text="{view>manager_ID}" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <Panel headerText="Create / Manage OKRs" class="sapUiSmallMarginBottom">
+          <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Label text="OKR Title" />
+            <Input value="{view>/okrDraft/title}" />
+            <Label text="Description" />
+            <TextArea value="{view>/okrDraft/description}" rows="2" />
+          </form:SimpleForm>
+          <Toolbar>
+            <Button text="Create OKR" type="Emphasized" press=".onCreateOKR" />
+          </Toolbar>
+          <Table items="{view>/okrs}" class="sapUiSmallMarginTop">
+            <columns>
+              <Column><Text text="Title" /></Column>
+              <Column><Text text="Description" /></Column>
+              <Column><Text text="Save" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Input value="{view>title}" />
+                  <TextArea value="{view>description}" rows="2" />
+                  <Button text="Save" press=".onSaveOKR" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <Panel headerText="Self-Assessment Report Of All Employees">
+          <Table items="{view>/assessments}">
+            <columns>
+              <Column><Text text="Employee" /></Column>
+              <Column><Text text="Assessment Type" /></Column>
+              <Column><Text text="Self-Assessment" /></Column>
+              <Column><Text text="Self Rating" /></Column>
+              <Column><Text text="Manager Feedback" /></Column>
+              <Column><Text text="Manager Rating" /></Column>
+              <Column><Text text="Final Rating" /></Column>
+              <Column><Text text="Status" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>employeeName}" />
+                  <Text text="{view>assessmentType}" />
+                  <Text text="{view>latestSelfAssessmentText}" wrapping="true" />
+                  <Text text="{view>latestSelfRatingLabel}" />
+                  <Text text="{view>latestManagerFeedback}" wrapping="true" />
+                  <Text text="{view>managerRating}" />
+                  <Text text="{view>finalRating}" />
+                  <ObjectStatus text="{view>finalStatus}" state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

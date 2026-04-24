@@ -1,4 +1,17 @@
-ID,title,type,status,progress,employee_ID,okr_ID
-bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1,Improve sprint predictability,Performance,In Progress,70,11111111-1111-1111-1111-111111111111,aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1
-bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2,Complete CAP advanced training,Development,Completed,100,11111111-1111-1111-1111-111111111111,aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2
-bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3,Launch mentoring circle,Development,Open,30,22222222-2222-2222-2222-222222222222,aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2
+ID,title,type,status,progress,submissionStatus,managerComment,employee_ID,okr_ID,cycle_ID
+bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1,Improve sprint predictability,Performance,In Progress,70,Submitted,Please tighten the milestone dates before approval,11111111-1111-1111-1111-111111111111,aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2,Complete CAP advanced training,Development,Completed,100,Approved,Strong development goal and clear completion evidence,11111111-1111-1111-1111-111111111111,aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaa2,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3,Build stakeholder communication habits,Development,In Progress,55,Approved,Keep sharing weekly updates with your manager,11111111-1111-1111-1111-111111111111,,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb4-bbbb-bbbb-bbbb-bbbbbbbbbbb4,Improve design documentation quality,Development,Open,20,Draft,,11111111-1111-1111-1111-111111111111,,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb5-bbbb-bbbb-bbbb-bbbbbbbbbbb5,Raise automation coverage,Performance,Open,40,Approved,Aligned to the delivery excellence OKR,11111111-1111-1111-1111-111111111112,aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb6-bbbb-bbbb-bbbb-bbbbbbbbbbb6,Strengthen coaching capability,Development,In Progress,60,Approved,Good improvement plan,11111111-1111-1111-1111-111111111112,,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb7-bbbb-bbbb-bbbb-bbbbbbbbbbb7,Improve product domain expertise,Development,Open,35,Submitted,Awaiting final review,11111111-1111-1111-1111-111111111112,,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb8-bbbb-bbbb-bbbb-bbbbbbbbbbb8,Practice concise written updates,Development,Completed,100,Approved,Well demonstrated through project communication,11111111-1111-1111-1111-111111111112,,eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1
+bbbbbbb9-bbbb-bbbb-bbbb-bbbbbbbbbbb9,Improve estimation accuracy,Performance,Completed,90,Approved,Good closeout from the previous quarter,11111111-1111-1111-1111-111111111111,aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1,eeeeeee2-eeee-eeee-eeee-eeeeeeeeeee2
+bbbbbb10-bbbb-bbbb-bbbb-bbbbbbbbbbb0,Build stakeholder empathy,Development,Completed,100,Approved,Very strong collaboration growth,11111111-1111-1111-1111-111111111111,,eeeeeee2-eeee-eeee-eeee-eeeeeeeeeee2
+bbbbbb11-bbbb-bbbb-bbbb-bbbbbbbbbbb1,Strengthen code review habits,Development,Completed,85,Approved,Improved review quality across the team,11111111-1111-1111-1111-111111111111,,eeeeeee2-eeee-eeee-eeee-eeeeeeeeeee2
+bbbbbb12-bbbb-bbbb-bbbb-bbbbbbbbbbb2,Improve release readiness,Development,Completed,88,Approved,Consistent release preparation last quarter,11111111-1111-1111-1111-111111111111,,eeeeeee2-eeee-eeee-eeee-eeeeeeeeeee2
+bbbbbb13-bbbb-bbbb-bbbb-bbbbbbbbbbb3,Reduce support escalations,Performance,Completed,95,Approved,Great historical performance data,11111111-1111-1111-1111-111111111112,aaaaaaa3-aaaa-aaaa-aaaa-aaaaaaaaaaa3,eeeeeee3-eeee-eeee-eeee-eeeeeeeeeee3
+bbbbbb14-bbbb-bbbb-bbbb-bbbbbbbbbbb4,Improve test discipline,Development,Completed,90,Approved,Solid previous cycle history,11111111-1111-1111-1111-111111111112,,eeeeeee3-eeee-eeee-eeee-eeeeeeeeeee3
+bbbbbb15-bbbb-bbbb-bbbb-bbbbbbbbbbb5,Grow mentoring confidence,Development,Completed,92,Approved,Strong employee growth outcome,11111111-1111-1111-1111-111111111112,,eeeeeee3-eeee-eeee-eeee-eeeeeeeeeee3
+bbbbbb16-bbbb-bbbb-bbbb-bbbbbbbbbbb6,Improve planning transparency,Development,Completed,89,Approved,Previous quarter goal history,11111111-1111-1111-1111-111111111112,,eeeeeee3-eeee-eeee-eeee-eeeeeeeeeee3

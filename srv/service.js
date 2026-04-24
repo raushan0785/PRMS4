@@ -1,10 +1,19 @@
 const cds = require('@sap/cds')
 
 module.exports = cds.service.impl(function () {
-  const { Goals, CheckIns, Assessments, Employees, OKRs } = this.entities
+  const { Goals, CheckIns, Assessments, Employees, OKRs, AppraisalCycles } = this.entities
+
+  const getCurrentCycle = async () => {
+    return SELECT.one.from(AppraisalCycles).where({ isCurrent: true })
+  }
 
   this.before('CREATE', Goals, async req => {
     const goal = req.data
+    const cycle = await getCurrentCycle()
+
+    if (cycle && !cycle.goalsOpen) {
+      return req.reject(400, 'Goals cannot be created after the quarter is closed.')
+    }
 
     if (!goal.employee_ID) {
       return req.reject(400, 'Employee is required for a goal.')
@@ -12,6 +21,10 @@ module.exports = cds.service.impl(function () {
 
     if (goal.type === 'Performance' && !goal.okr_ID) {
       return req.reject(400, 'Performance goals must be mapped to an OKR.')
+    }
+
+    if (cycle && !goal.cycle_ID) {
+      goal.cycle_ID = cycle.ID
     }
 
     const existingDevelopmentGoals = await SELECT.one
@@ -25,6 +38,47 @@ module.exports = cds.service.impl(function () {
     const developmentCount = Number(existingDevelopmentGoals?.count || 0)
     if (goal.type !== 'Development' && developmentCount < 3) {
       return req.reject(400, 'Each employee must have at least 3 Development Goals before other goals can be created.')
+    }
+  })
+
+  this.before('UPDATE', Goals, async req => {
+    const cycle = await getCurrentCycle()
+    if (!cycle) return
+
+    const editableFields = ['title', 'description', 'type', 'employee_ID', 'okr_ID']
+    const touchesEditableFields = editableFields.some(field => req.data[field] !== undefined)
+    const touchesCheckInFields = req.data.status !== undefined || req.data.progress !== undefined
+
+    if (touchesEditableFields && !cycle.goalsOpen) {
+      return req.reject(400, 'Goal editing is closed for the current quarter.')
+    }
+
+    if (touchesCheckInFields && !cycle.checkInOpen) {
+      return req.reject(400, 'Goal progress cannot be updated after the check-in window is closed.')
+    }
+  })
+
+  this.before('CREATE', CheckIns, async req => {
+    const cycle = await getCurrentCycle()
+    if (cycle && !cycle.checkInOpen) {
+      return req.reject(400, 'Quarterly check-ins are currently closed.')
+    }
+
+    if (cycle) {
+      if (!req.data.cycle_ID) req.data.cycle_ID = cycle.ID
+      if (!req.data.quarter) req.data.quarter = cycle.quarter
+    }
+  })
+
+  this.before('UPDATE', CheckIns, async req => {
+    const cycle = await getCurrentCycle()
+    if (!cycle) return
+
+    const editableFields = ['status', 'comments', 'notes', 'progress', 'goal_ID', 'employee_ID']
+    const touchesEditableFields = editableFields.some(field => req.data[field] !== undefined)
+
+    if (touchesEditableFields && !cycle.checkInOpen) {
+      return req.reject(400, 'Quarterly check-ins are currently closed.')
     }
   })
 
@@ -92,6 +146,40 @@ module.exports = cds.service.impl(function () {
     return `Generated goals: ${generatedTitles.join(', ')}`
   })
 
+  this.on('submitGoalsForApproval', async req => {
+    const { employeeID } = req.data
+
+    if (!employeeID) {
+      return req.reject(400, 'employeeID is required.')
+    }
+
+    const cycle = await getCurrentCycle()
+    if (cycle && !cycle.goalsOpen) {
+      return req.reject(400, 'Goal submission is closed for the current quarter.')
+    }
+
+    const goals = await SELECT.from(Goals).where({ employee_ID: employeeID })
+    if (!goals.length) {
+      return req.reject(400, 'Create goals before submitting them for approval.')
+    }
+
+    const developmentGoals = goals.filter(goal => goal.type === 'Development')
+    const performanceGoals = goals.filter(goal => goal.type === 'Performance')
+    if (developmentGoals.length < 3) {
+      return req.reject(400, 'At least 3 development goals are required before submission.')
+    }
+
+    if (performanceGoals.length < 1) {
+      return req.reject(400, 'At least 1 performance goal is required before submission.')
+    }
+
+    await UPDATE(Goals)
+      .set({ submissionStatus: 'Submitted' })
+      .where({ employee_ID: employeeID })
+
+    return 'Goals submitted to the manager for approval.'
+  })
+
   this.on('improveAssessment', req => {
     const text = (req.data.text || '').trim()
     if (!text) return 'Please provide assessment text to improve.'
@@ -114,7 +202,8 @@ module.exports = cds.service.impl(function () {
       quarter: inferQuarter(),
       status: 'Submitted',
       comments: comment,
-      goal_ID: goalID
+      goal_ID: goalID,
+      cycle_ID: (await getCurrentCycle())?.ID
     })
 
     return `Check-in submitted for goal ${goalID}.`
@@ -148,10 +237,14 @@ module.exports = cds.service.impl(function () {
   })
 
   this.before('UPDATE', Assessments, async req => {
-    if (req.data.managerRating === undefined) return
-
     const current = await SELECT.one.from(Assessments).where({ ID: req.data.ID })
     if (!current) return
+
+    if (current.finalStatus === 'Finalized' && req.data.finalStatus !== 'Open') {
+      return req.reject(400, 'Finalized assessments cannot be edited unless they are sent back once.')
+    }
+
+    if (req.data.managerRating === undefined) return
 
     const hasManagerSubmission = current.managerRating !== null && current.managerRating !== undefined
     if (hasManagerSubmission && current.sendBackCount >= 1) {

@@ -1,0 +1,4 @@
+ID,year,quarter,status,goalsOpen,checkInOpen,isCurrent
+eeeeeee1-eeee-eeee-eeee-eeeeeeeeeee1,2026,Q2,Open,true,true,true
+eeeeeee2-eeee-eeee-eeee-eeeeeeeeeee2,2026,Q1,Closed,false,false,false
+eeeeeee3-eeee-eeee-eeee-eeeeeeeeeee3,2025,Q4,Closed,false,false,false

@@ -34,7 +34,7 @@
                 class="sapUiMediumMarginTop"
                 type="Information"
                 showIcon="true"
-                text="Demo users: emp01 / welcome123, mgr01 / welcome123, hr01 / welcome123" />
+                text="Demo users: emp01 / welcome123, emp02 / welcome123, mgr01 / welcome123, hr01 / welcome123" />
             </VBox>
           </Panel>
         </VBox>

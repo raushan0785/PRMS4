@@ -1,0 +1,209 @@
+<mvc:View
+  controllerName="prmsui.controller.Employee"
+  displayBlock="true"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:mvc="sap.ui.core.mvc">
+  <Page title="Employee Workspace" class="sapUiContentPadding">
+    <headerContent>
+      <ObjectStatus text="{session>/fullName}" state="Information" />
+      <Button text="Logout" press=".onLogout" />
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Panel headerText="Appraisal Cycle" class="sapUiSmallMarginBottom">
+          <HBox justifyContent="SpaceBetween" wrap="Wrap">
+            <VBox>
+              <Title text="{view>/cycleText}" level="H4" />
+              <Select selectedKey="{view>/selectedCycleId}" change=".onCycleChange" items="{view>/cycles}" width="14rem" class="sapUiTinyMarginTop">
+                <core:Item key="{view>ID}" text="{= ${view>year} + ' - ' + ${view>quarter} }" />
+              </Select>
+              <Text text="{= 'Goal window: ' + (${view>/stats/canEditGoals} ? 'Open' : 'Closed') }" />
+              <Text text="{= 'Check-in window: ' + (${view>/stats/canEditCheckIns} ? 'Open' : 'Closed') }" />
+            </VBox>
+            <VBox>
+              <Text text="{= 'Manager: ' + ${view>/managerName} }" />
+              <Text text="{= 'Cycle status: ' + (${view>/cycle/status} || 'N/A') }" />
+            </VBox>
+          </HBox>
+        </Panel>
+
+        <Panel headerText="Company OKRs" class="sapUiSmallMarginBottom">
+          <Table items="{view>/okrs}">
+            <columns>
+              <Column><Text text="Title" /></Column>
+              <Column><Text text="Description" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>title}" />
+                  <Text text="{view>description}" wrapping="true" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <Panel headerText="Create Goals" class="sapUiSmallMarginBottom">
+          <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Label text="Goal Title" />
+            <Input value="{view>/goalDraft/title}" enabled="{view>/stats/canEditGoals}" />
+            <Label text="Description" />
+            <TextArea value="{view>/goalDraft/description}" rows="2" enabled="{view>/stats/canEditGoals}" />
+            <Label text="Type" />
+            <Select selectedKey="{view>/goalDraft/type}" enabled="{view>/stats/canEditGoals}">
+              <core:Item key="Development" text="Development" />
+              <core:Item key="Performance" text="Performance" />
+            </Select>
+            <Label text="OKR Mapping" />
+            <Select selectedKey="{view>/goalDraft/okr_ID}" items="{view>/okrs}" enabled="{view>/stats/canEditGoals}">
+              <core:Item key="{view>ID}" text="{view>title}" />
+            </Select>
+            <Label text="Status" />
+            <Select selectedKey="{view>/goalDraft/status}" enabled="{view>/stats/canEditGoals}">
+              <core:Item key="Open" text="Open" />
+              <core:Item key="In Progress" text="In Progress" />
+              <core:Item key="Completed" text="Completed" />
+            </Select>
+            <Label text="Progress" />
+            <StepInput value="{view>/goalDraft/progress}" min="0" max="100" enabled="{view>/stats/canEditGoals}" />
+          </form:SimpleForm>
+          <Toolbar>
+            <Button text="Create Goal" type="Emphasized" press=".onCreateGoal" enabled="{view>/stats/canEditGoals}" />
+            <ToolbarSpacer />
+            <Button text="Submit Goals To Manager" press=".onSubmitGoalsForApproval" enabled="{view>/stats/canEditGoals}" />
+          </Toolbar>
+        </Panel>
+
+        <Panel headerText="Goals" class="sapUiSmallMarginBottom">
+          <Table items="{view>/goals}">
+            <columns>
+              <Column><Text text="Title" /></Column>
+              <Column><Text text="Type" /></Column>
+              <Column><Text text="Status" /></Column>
+              <Column><Text text="Progress" /></Column>
+              <Column><Text text="Approval" /></Column>
+              <Column><Text text="Manager Comment" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>title}" />
+                  <Text text="{view>type}" />
+                  <Select selectedKey="{view>status}" enabled="{view>/stats/canEditCheckIns}">
+                    <core:Item key="Open" text="Open" />
+                    <core:Item key="In Progress" text="In Progress" />
+                    <core:Item key="Completed" text="Completed" />
+                  </Select>
+                  <HBox alignItems="Center">
+                    <StepInput value="{view>progress}" min="0" max="100" width="6rem" enabled="{view>/stats/canEditCheckIns}" />
+                    <Button text="Save" press=".onUpdateGoalProgress" enabled="{view>/stats/canEditCheckIns}" class="sapUiTinyMarginBegin" />
+                  </HBox>
+                  <ObjectStatus text="{view>submissionStatus}" state="{= ${view>submissionStatus} === 'Approved' ? 'Success' : ${view>submissionStatus} === 'Rejected' ? 'Error' : 'Information' }" />
+                  <Text text="{view>managerComment}" wrapping="true" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <Panel headerText="Quarterly Check-Ins" class="sapUiSmallMarginBottom">
+          <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Label text="Goal" />
+            <Select selectedKey="{view>/checkInDraft/goal_ID}" items="{view>/goals}" enabled="{view>/stats/canEditCheckIns}">
+              <core:Item key="{view>ID}" text="{view>title}" />
+            </Select>
+            <Label text="Progress" />
+            <StepInput value="{view>/checkInDraft/progress}" min="0" max="100" enabled="{view>/stats/canEditCheckIns}" />
+            <Label text="Status" />
+            <Select selectedKey="{view>/checkInDraft/status}" enabled="{view>/stats/canEditCheckIns}">
+              <core:Item key="Open" text="Open" />
+              <core:Item key="In Progress" text="In Progress" />
+              <core:Item key="Completed" text="Completed" />
+            </Select>
+            <Label text="Focus Area" />
+            <Select selectedKey="{view>/checkInDraft/focusArea}" enabled="{view>/stats/canEditCheckIns}">
+              <core:Item key="Delivery" text="Delivery" />
+              <core:Item key="Collaboration" text="Collaboration" />
+              <core:Item key="Learning" text="Learning" />
+              <core:Item key="Quality" text="Quality" />
+            </Select>
+            <Label text="Self Rating" />
+            <Select selectedKey="{view>/checkInDraft/selfRating}" enabled="{view>/stats/canEditCheckIns}">
+              <core:Item key="1" text="1 - Too New to Assess" />
+              <core:Item key="2" text="2 - Needs Improvement" />
+              <core:Item key="3" text="3 - Meets Expectations" />
+              <core:Item key="4" text="4 - Exceeds Expectations" />
+              <core:Item key="5" text="5 - Outstanding" />
+            </Select>
+            <Label text="Achievements / Challenges" />
+            <TextArea value="{view>/checkInDraft/notes}" rows="3" enabled="{view>/stats/canEditCheckIns}" />
+          </form:SimpleForm>
+          <Toolbar>
+            <Button text="Submit Update To Manager" type="Emphasized" press=".onAddCheckIn" enabled="{view>/stats/canEditCheckIns}" />
+          </Toolbar>
+          <Table items="{view>/checkIns}" class="sapUiSmallMarginTop">
+            <columns>
+              <Column><Text text="Quarter" /></Column>
+              <Column><Text text="Focus Area" /></Column>
+              <Column><Text text="Self Rating" /></Column>
+              <Column><Text text="Progress" /></Column>
+              <Column><Text text="Your Update" /></Column>
+              <Column><Text text="Manager Comment" /></Column>
+              <Column><Text text="Action" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>quarter}" />
+                  <Text text="{view>focusArea}" />
+                  <Text text="{view>selfRatingLabel}" />
+                  <Text text="{= ${view>progress} + '%' }" />
+                  <Text text="{view>notes}" wrapping="true" />
+                  <Text text="{view>comments}" wrapping="true" />
+                  <HBox>
+                    <Button text="Edit" press=".onEditCheckIn" enabled="{= !!${view>comments} &amp;&amp; !${view>resubmittedOnce} }" />
+                    <Button text="Re-Submit Once" press=".onAddCheckIn" class="sapUiTinyMarginBegin" enabled="{= ${view>/editingCheckInId} === ${view>ID} &amp;&amp; !!${view>comments} &amp;&amp; !${view>resubmittedOnce} }" />
+                  </HBox>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <Panel headerText="Manager Feedback &amp; Final Rating" class="sapUiSmallMarginBottom">
+          <Table items="{view>/assessments}">
+            <columns>
+              <Column><Text text="Type" /></Column>
+              <Column><Text text="Self-Assessment" /></Column>
+              <Column><Text text="Self Rating" /></Column>
+              <Column><Text text="Manager Feedback" /></Column>
+              <Column><Text text="Manager Rating" /></Column>
+              <Column><Text text="Final Rating" /></Column>
+              <Column><Text text="Status" /></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{view>assessmentType}" />
+                  <Text text="{view>latestSelfAssessmentText}" wrapping="true" />
+                  <Text text="{view>latestSelfRatingLabel}" />
+                  <Text text="{view>latestManagerFeedback}" wrapping="true" />
+                  <Text text="{view>managerRating}" />
+                  <Text text="{view>finalRating}" />
+                  <ObjectStatus text="{view>finalStatus}" state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+          <Toolbar>
+            <ToolbarSpacer />
+            <Button text="Send Back Final Rating Once" press=".onSendBackRating" enabled="{view>/stats/canSendBack}" />
+          </Toolbar>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

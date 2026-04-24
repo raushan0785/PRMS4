@@ -15,7 +15,7 @@ sap.ui.define([
         showGoalForm: false,
         showCheckInForm: false,
         showEmployeeForm: false,
-        generationMessage: "",
+        selectedQuarter: "Q2-2026",
         generatedGoals: [],
         okrs: [],
         myGoals: [],
@@ -23,16 +23,23 @@ sap.ui.define([
         orgGoals: [],
         assessments: [],
         checkIns: [],
+        allEmployees: [],
+        managers: [],
+        pendingCheckInRequests: [],
+        selfRatingText: "Not Rated",
+        selfRatingValue: 0,
         stats: {
           totalGoals: 0,
           completedGoals: 0,
           averageRating: "0.0",
-          completionRate: "0.0",       // NEW: pre-computed for view
-          finalizedAssessments: 0,     // NEW: pre-computed for view
-          totalEmployees: 0,           // NEW: pre-computed for view
-          hasAssessments: false,       // NEW: replaces .length > 0 in view
-          hasCheckIns: false,          // NEW: replaces .length > 0 in view
-          hasNoAssessment: true        // NEW: replaces .length === 0 in view
+          completionRate: "0.0",
+          finalizedAssessments: 0,
+          totalEmployees: 0,
+          hasAssessments: false,
+          hasCheckIns: false,
+          hasNoAssessment: true,
+          hasFinalizedAssessment: false,
+          canSendBack: true
         },
         finalRatingText: "Pending",
         goalDraft: this._createGoalDraft(),
@@ -153,13 +160,11 @@ sap.ui.define([
       var oSource = oEvent.getSource();
       var sGoalId = oSource.getBindingContext("dashboard").getProperty("ID");
       var iNewProgress = oSource.getValue();
-      var oDashboardModel = this.getView().getModel("dashboard");
 
       try {
-        var oGoal = this.getView().getModel().bindContext(`/Goals('${sGoalId}')`);
-        await oGoal.requestObject();
-        oGoal.setProperty("progress", iNewProgress);
-        await oGoal.save();
+        await this._patchEntity("Goals", sGoalId, {
+          progress: Number(iNewProgress)
+        });
         MessageToast.show("Goal progress updated successfully");
         await this._loadDashboardData();
       } catch (oError) {
@@ -173,10 +178,9 @@ sap.ui.define([
       var sNewStatus = oSource.getSelectedKey();
 
       try {
-        var oGoal = this.getView().getModel().bindContext(`/Goals('${sGoalId}')`);
-        await oGoal.requestObject();
-        oGoal.setProperty("status", sNewStatus);
-        await oGoal.save();
+        await this._patchEntity("Goals", sGoalId, {
+          status: sNewStatus
+        });
         MessageToast.show("Goal status updated successfully");
         await this._loadDashboardData();
       } catch (oError) {
@@ -298,10 +302,7 @@ sap.ui.define([
       var sRatingType = "managerRating";
 
       try {
-        var oAssessment = this.getView().getModel().bindContext(`/Assessments('${sAssessmentId}')`);
-        await oAssessment.requestObject();
-        oAssessment.setProperty(sRatingType, iNewRating);
-        await oAssessment.save();
+        await this._patchEntity("Assessments", sAssessmentId, this._buildAssessmentRatingPayload(sRatingType, iNewRating));
         MessageToast.show("Assessment rating updated successfully");
         await this._loadDashboardData();
       } catch (oError) {
@@ -311,19 +312,18 @@ sap.ui.define([
 
     onFinalizeAssessment: async function (oEvent) {
       var oSource = oEvent.getSource();
-      var sAssessmentId = oSource.getBindingContext("dashboard").getProperty("ID");
+      var oAssessmentData = oSource.getBindingContext("dashboard").getProperty();
+      var sAssessmentId = oAssessmentData.ID;
 
       try {
-        var oAssessment = this.getView().getModel().bindContext(`/Assessments('${sAssessmentId}')`);
-        await oAssessment.requestObject();
-
-        var iManagerRating = oAssessment.getProperty("managerRating") || 0;
-        var iSelfRating = oAssessment.getProperty("selfRating") || 0;
+        var iManagerRating = oAssessmentData.managerRating || 0;
+        var iSelfRating = oAssessmentData.selfRating || 0;
         var iFinalRating = (iManagerRating + iSelfRating) / 2;
 
-        oAssessment.setProperty("finalRating", iFinalRating);
-        oAssessment.setProperty("finalStatus", "Finalized");
-        await oAssessment.save();
+        await this._patchEntity("Assessments", sAssessmentId, {
+          finalRating: Number(iFinalRating.toFixed(1)),
+          finalStatus: "Finalized"
+        });
 
         MessageToast.show("Assessment finalized with rating: " + iFinalRating.toFixed(1));
         await this._loadDashboardData();
@@ -370,6 +370,24 @@ sap.ui.define([
             employeeName: mEmployees[oGoal.employee_ID] || "Unknown"
           });
         });
+        var mGoals = {};
+        aDecoratedGoals.forEach(function (oGoal) {
+          mGoals[oGoal.ID] = oGoal;
+        });
+
+        var aDecoratedAssessments = aAssessments.map(function (oAssessment) {
+          return Object.assign({}, oAssessment, {
+            employeeName: mEmployees[oAssessment.employee_ID] || "Unknown"
+          });
+        });
+
+        var aDecoratedCheckIns = aCheckIns.map(function (oCheckIn) {
+          var oGoal = mGoals[oCheckIn.goal_ID] || {};
+          return Object.assign({}, oCheckIn, {
+            employeeName: mEmployees[oCheckIn.employee_ID] || "Unknown",
+            goalTitle: oGoal.title || "Unknown Goal"
+          });
+        });
 
         var aMyGoals = aDecoratedGoals.filter(function (oGoal) {
           return oGoal.employee_ID === sEmployeeId;
@@ -385,16 +403,19 @@ sap.ui.define([
             ? aTeamGoals
             : aDecoratedGoals;
 
-        var aVisibleAssessments = aAssessments.filter(function (oAssessment) {
+        var aVisibleAssessments = aDecoratedAssessments.filter(function (oAssessment) {
           if (oSessionModel.getProperty("/isEmployee")) return oAssessment.employee_ID === sEmployeeId;
           if (oSessionModel.getProperty("/isManager")) return aTeamMemberIds.indexOf(oAssessment.employee_ID) !== -1;
           return true;
         });
 
-        var aVisibleCheckIns = aCheckIns.filter(function (oCheckIn) {
+        var aVisibleCheckIns = aDecoratedCheckIns.filter(function (oCheckIn) {
           if (oSessionModel.getProperty("/isEmployee")) return oCheckIn.employee_ID === sEmployeeId;
           if (oSessionModel.getProperty("/isManager")) return aTeamMemberIds.indexOf(oCheckIn.employee_ID) !== -1;
           return true;
+        });
+        var aManagers = aEmployees.filter(function (oEmployee) {
+          return oEmployee.role === "Manager";
         });
 
         var iCompletedGoals = aVisibleGoals.filter(function (oGoal) {
@@ -425,8 +446,20 @@ sap.ui.define([
           return oAssessment.finalStatus === "Finalized";
         }).length;
 
-        // Pre-compute unique employee count from orgGoals
-        var iTotalEmployees = aDecoratedGoals.length;
+        // Check if employee has finalized assessment and can still send back
+        var bHasFinalizedAssessment = false;
+        var bCanSendBack = true;
+        
+        if (oSessionModel.getProperty("/isEmployee")) {
+          var oOwnAssessment = aDecoratedAssessments.find(function (oAssessment) {
+            return oAssessment.employee_ID === sEmployeeId && oAssessment.finalStatus === "Finalized";
+          });
+          
+          bHasFinalizedAssessment = !!oOwnAssessment;
+          bCanSendBack = oOwnAssessment ? ((oOwnAssessment.sendBackCount || 0) < 1) : false;
+        }
+
+        var iTotalEmployees = aEmployees.length;
 
         // Boolean flags to replace unsupported .length expressions in the view
         var bHasAssessments = aVisibleAssessments.length > 0;
@@ -435,13 +468,13 @@ sap.ui.define([
 
         var sFinalRatingText = "Pending";
         if (oSessionModel.getProperty("/isEmployee")) {
-          var oOwnAssessment = aAssessments.find(function (oAssessment) {
+          var oOwnAssessment = aDecoratedAssessments.find(function (oAssessment) {
             return oAssessment.employee_ID === sEmployeeId;
           });
 
           if (oOwnAssessment) {
             sFinalRatingText = oOwnAssessment.finalStatus === "Finalized"
-              ? "Finalized Rating: " + (oOwnAssessment.managerRating || oOwnAssessment.selfRating || "N/A")
+              ? "Finalized Rating: " + (oOwnAssessment.finalRating || "N/A")
               : "Open Review";
           }
         }
@@ -468,16 +501,21 @@ sap.ui.define([
           orgGoals: aDecoratedGoals,
           assessments: aVisibleAssessments,
           checkIns: aVisibleCheckIns,
+          allEmployees: aEmployees,
+          managers: aManagers,
+          pendingCheckInRequests: aVisibleCheckIns,
           stats: {
             totalGoals: iTotalGoals,
             completedGoals: iCompletedGoals,
             averageRating: fAverageRating.toFixed(1),
-            completionRate: fCompletionRate.toFixed(1),       // NEW
-            finalizedAssessments: iFinalizedAssessments,       // NEW
-            totalEmployees: iTotalEmployees,                   // NEW
-            hasAssessments: bHasAssessments,                   // NEW
-            hasCheckIns: bHasCheckIns,                         // NEW
-            hasNoAssessment: bHasNoAssessment                  // NEW
+            completionRate: fCompletionRate.toFixed(1),
+            finalizedAssessments: iFinalizedAssessments,
+            totalEmployees: iTotalEmployees,
+            hasAssessments: bHasAssessments,
+            hasCheckIns: bHasCheckIns,
+            hasNoAssessment: bHasNoAssessment,
+            hasFinalizedAssessment: bHasFinalizedAssessment,
+            canSendBack: bCanSendBack
           },
           finalRatingText: sFinalRatingText,
           goalDraft: oDashboardModel.getProperty("/goalDraft") || this._createGoalDraft(),
@@ -501,6 +539,7 @@ sap.ui.define([
           orgGoals: [],
           assessments: [],
           checkIns: [],
+          allEmployees: [],
           stats: {
             totalGoals: 0,
             completedGoals: 0,
@@ -510,7 +549,9 @@ sap.ui.define([
             totalEmployees: 0,
             hasAssessments: false,
             hasCheckIns: false,
-            hasNoAssessment: true
+            hasNoAssessment: true,
+            hasFinalizedAssessment: false,
+            canSendBack: true
           },
           finalRatingText: "Pending",
           goalDraft: oDashboardModel.getProperty("/goalDraft") || this._createGoalDraft(),
@@ -549,6 +590,32 @@ sap.ui.define([
         progress: 0,
         status: "Open"
       };
+    },
+
+    _buildServiceUrl: function (sRelativePath) {
+      var sBasePath = this.getOwnerComponent().getManifestEntry("/sap.app/dataSources/mainService/uri") || "/odata/v4/prms/";
+      return sBasePath.replace(/\/$/, "") + sRelativePath;
+    },
+
+    _patchEntity: async function (sEntitySet, sEntityId, oPayload) {
+      var oResponse = await fetch(this._buildServiceUrl("/" + sEntitySet + "('" + encodeURIComponent(sEntityId) + "')"), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(oPayload)
+      });
+
+      if (!oResponse.ok) {
+        var sResponseText = await oResponse.text();
+        throw new Error(sResponseText || ("Request failed with status " + oResponse.status));
+      }
+    },
+
+    _buildAssessmentRatingPayload: function (sRatingType, iRatingValue) {
+      var oPayload = {};
+      oPayload[sRatingType] = Number(iRatingValue);
+      return oPayload;
     },
 
     _extractErrorMessage: function (oError) {
@@ -731,8 +798,7 @@ sap.ui.define([
         oDashboardModel.setProperty("/employeeDraft", {
           name: "",
           role: "Employee",
-          username: "",
-          password: "welcome123"
+          manager_ID: ""
         });
       }
     },
@@ -747,8 +813,8 @@ sap.ui.define([
       var oDashboardModel = this.getView().getModel("dashboard");
       var oDraft = oDashboardModel.getProperty("/employeeDraft");
 
-      if (!oDraft.name || !oDraft.username) {
-        MessageBox.error("Please provide employee name and username.");
+      if (!oDraft.name) {
+        MessageBox.error("Please provide employee name.");
         return;
       }
 
@@ -758,7 +824,8 @@ sap.ui.define([
         var oListBinding = this.getView().getModel().bindList("/Employees");
         var oContext = oListBinding.create({
           name: oDraft.name,
-          role: oDraft.role
+          role: oDraft.role,
+          manager_ID: oDraft.manager_ID || null
         });
 
         await oContext.created();
@@ -855,24 +922,130 @@ sap.ui.define([
       oDialog.open();
     },
 
-    _createSelfAssessment: function (sEmployeeId, iRating, sComments) {
-      var oODataModel = this.getView().getModel();
+    onSelfRatingChange: function (oEvent) {
+      var iSelectedIndex = oEvent.getParameter("selectedIndex");
+      var aLabels = [
+        "Too New to Assess",
+        "Needs Improvement",
+        "Meets Expectations",
+        "Exceeds Expectations",
+        "Outstanding"
+      ];
 
-      oODataModel.create("/Assessments", {
-        employee_ID: sEmployeeId,
-        selfRating: iRating,
-        selfComments: sComments,
-        status: "Self-Submitted",
-        createdAt: new Date()
-      }, {
-        success: function () {
-          sap.m.MessageToast.show("Self assessment submitted successfully!");
-          this._loadDashboardData();
-        }.bind(this),
-        error: function (oError) {
-          sap.m.MessageToast.show("Error submitting self assessment: " + (oError.responseText || oError.message));
+      this.getView().getModel("dashboard").setProperty("/selfRatingText", aLabels[iSelectedIndex] || "Not Rated");
+      this.getView().getModel("dashboard").setProperty("/selfRatingValue", iSelectedIndex + 1);
+    },
+
+    _createSelfAssessment: async function (sEmployeeId, iRating, sComments) {
+      var oDashboardModel = this.getView().getModel("dashboard");
+
+      try {
+        var aAssessments = oDashboardModel.getProperty("/assessments") || [];
+        var oExistingAssessment = aAssessments.find(function (oAssessment) {
+          return oAssessment.employee_ID === sEmployeeId;
+        });
+
+        if (oExistingAssessment) {
+          await this._patchEntity("Assessments", oExistingAssessment.ID, {
+            selfRating: Number(iRating),
+            comments: sComments
+          });
+        } else {
+          var oListBinding = this.getView().getModel().bindList("/Assessments");
+          var oContext = oListBinding.create({
+            employee_ID: sEmployeeId,
+            assessmentType: "Self",
+            selfRating: Number(iRating),
+            managerRating: 0,
+            finalRating: 0,
+            managerComments: "",
+            comments: sComments,
+            sendBackCount: 0,
+            finalStatus: "Open"
+          });
+
+          await oContext.created();
         }
+
+        MessageToast.show("Self assessment submitted successfully!");
+        await this._loadDashboardData();
+      } catch (oError) {
+        MessageToast.show("Error submitting self assessment: " + this._extractErrorMessage(oError));
+      }
+    },
+
+    // Employee: Send back final rating for reconsideration (once only)
+    onSendBackRating: async function () {
+      var oDashboardModel = this.getView().getModel("dashboard");
+      var oSessionModel = this.getOwnerComponent().getModel("session");
+      var sEmployeeId = oSessionModel.getProperty("/employeeId");
+      
+      // Get the send back reason from the text area
+      var oTextArea = this.getView().byId("sendBackReason");
+      var sReason = oTextArea ? oTextArea.getValue() : "";
+      
+      if (!sReason) {
+        MessageBox.error("Please provide a reason for requesting reconsideration.");
+        return;
+      }
+
+      // Find the finalized assessment
+      var aAssessments = oDashboardModel.getProperty("/assessments") || [];
+      var oFinalizedAssessment = aAssessments.find(function(a) {
+        return a.employee_ID === sEmployeeId && a.finalStatus === "Finalized";
       });
+
+      if (!oFinalizedAssessment) {
+        MessageBox.error("No finalized assessment found to send back.");
+        return;
+      }
+
+      // Check if already sent back
+      if ((oFinalizedAssessment.sendBackCount || 0) >= 1) {
+        MessageBox.error("You have already used your one-time request for reconsideration.");
+        return;
+      }
+
+      oDashboardModel.setProperty("/busy", true);
+
+      try {
+        var oAction = this.getView().getModel().bindContext("/sendBackAssessment(...)");
+        oAction.setParameter("assessmentID", oFinalizedAssessment.ID);
+        await oAction.execute();
+
+        var oResult = await oAction.getBoundContext().requestObject();
+        MessageBox.success(oResult && oResult.value ? oResult.value : "Assessment sent back for reconsideration successfully!");
+        
+        // Update local state to prevent further send backs
+        oDashboardModel.setProperty("/stats/canSendBack", false);
+        await this._loadDashboardData();
+      } catch (oError) {
+        MessageBox.error("Failed to send back assessment: " + this._extractErrorMessage(oError));
+      } finally {
+        oDashboardModel.setProperty("/busy", false);
+      }
+    },
+
+    // Handle quarter selection change
+    onQuarterChange: function (oEvent) {
+      var oDashboardModel = this.getView().getModel("dashboard");
+      var sSelectedQuarter = oEvent.getParameter("selectedKey");
+      oDashboardModel.setProperty("/selectedQuarter", sSelectedQuarter);
+      
+      // Reload data for selected quarter
+      this._loadDashboardData();
+      MessageToast.show("Viewing data for " + sSelectedQuarter);
+    },
+
+    // Review check-in request (Manager)
+    onReviewCheckIn: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var oCheckIn = oSource.getBindingContext("dashboard").getProperty();
+      
+      MessageBox.information(
+        "Check-In Review\n\nEmployee: " + oCheckIn.employeeName + "\nGoal: " + oCheckIn.goalTitle + "\nProgress: " + oCheckIn.progress + "%\nStatus: " + oCheckIn.status + "\n\nNotes: " + (oCheckIn.notes || "No notes provided"),
+        { title: "Review Check-In" }
+      );
     }
   });
 });

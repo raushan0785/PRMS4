@@ -19,7 +19,7 @@ sap.ui.define([
       }
 
       if (this.getOwnerComponent().getModel("session").getProperty("/authenticated")) {
-        this.getOwnerComponent().getRouter().navTo("dashboard");
+        this.getOwnerComponent().getRouter().navTo(this._getHomeRoute(this.getOwnerComponent().getModel("session").getProperty("/role")));
       }
     },
 
@@ -62,7 +62,19 @@ sap.ui.define([
       window.sessionStorage.setItem("PRMS_SESSION", JSON.stringify(oSessionData));
 
       console.log("Session saved. Navigating to dashboard...");
-      this.getOwnerComponent().getRouter().navTo("dashboard");
+      this.getOwnerComponent().getRouter().navTo(this._getHomeRoute(oUser.role));
+    },
+
+    _getHomeRoute: function (sRole) {
+      if (sRole === "Manager") {
+        return "manager";
+      }
+
+      if (sRole === "HR" || sRole === "Admin") {
+        return "hr";
+      }
+
+      return "employee";
     }
   });
 });
