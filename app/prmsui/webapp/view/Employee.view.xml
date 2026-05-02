@@ -31,16 +31,26 @@
 
         <Panel headerText="Company OKRs" class="sapUiSmallMarginBottom">
           <Table items="{view>/okrs}">
-            <columns>
-              <Column><Text text="Title" /></Column>
-              <Column><Text text="Description" /></Column>
-            </columns>
+           
+
+<columns>
+  <Column><Text text="Title" /></Column>
+  <Column><Text text="Description" /></Column>
+  <Column><Text text="Year / Quarter" /></Column>
+</columns>
+
+
+
+
             <items>
               <ColumnListItem>
-                <cells>
-                  <Text text="{view>title}" />
-                  <Text text="{view>description}" wrapping="true" />
-                </cells>
+                
+<cells>
+  <Text text="{view>title}" />
+  <Text text="{view>description}" wrapping="true" />
+  <Text text="{view>cycleText}" />
+</cells>
+
               </ColumnListItem>
             </items>
           </Table>
@@ -177,7 +187,7 @@
           <Table items="{view>/assessments}">
             <columns>
               <Column><Text text="Type" /></Column>
-              <Column><Text text="Self-Assessment" /></Column>
+              
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Feedback" /></Column>
               <Column><Text text="Manager Rating" /></Column>
@@ -188,7 +198,7 @@
               <ColumnListItem>
                 <cells>
                   <Text text="{view>assessmentType}" />
-                  <Text text="{view>latestSelfAssessmentText}" wrapping="true" />
+                
                   <Text text="{view>latestSelfRatingLabel}" />
                   <Text text="{view>latestManagerFeedback}" wrapping="true" />
                   <Text text="{view>managerRating}" />

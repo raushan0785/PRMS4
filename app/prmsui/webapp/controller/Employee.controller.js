@@ -60,47 +60,147 @@ sap.ui.define([
         var aAllGoals = aResults[0].filter(function (oGoal) {
           return oGoal.employee_ID === sEmployeeId;
         });
-        var aOKRs = aResults[1];
+        
         var aCycles = aResults[2];
-        var aAllAssessments = aResults[3].filter(function (oAssessment) {
-          return oAssessment.employee_ID === sEmployeeId;
-        });
-        var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
-          return oCheckIn.employee_ID === sEmployeeId;
-        });
-        var aEmployees = aResults[5];
-        var oEmployee = aEmployees.find(function (oEntry) {
-          return oEntry.ID === sEmployeeId;
-        });
-        var oManager = aEmployees.find(function (oEntry) {
-          return oEntry.ID === (oEmployee && oEmployee.manager_ID);
-        });
-        var sSelectedCycleId = oViewModel.getProperty("/selectedCycleId") || (this.getCurrentCycle(aCycles) || {}).ID || "";
-        var oCycle = aCycles.find(function (oEntry) {
-          return oEntry.ID === sSelectedCycleId;
-        }) || this.getCurrentCycle(aCycles);
-        var aGoals = aAllGoals.filter(function (oGoal) {
-          return oGoal.cycle_ID === (oCycle && oCycle.ID);
-        });
-        var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
-          return oCheckIn.cycle_ID === (oCycle && oCycle.ID);
-        });
-        var aAssessments = aAllAssessments.filter(function (oAssessment) {
-          return oAssessment.cycle_ID === (oCycle && oCycle.ID);
-        }).map(function (oAssessment) {
-          var oLatestCheckIn = this._getLatestCheckIn(aCheckIns);
-          return Object.assign({}, oAssessment, {
-            latestSelfAssessmentText: oLatestCheckIn ? oLatestCheckIn.notes : (oAssessment.comments || ""),
-            latestSelfRatingLabel: this._formatSelfRating(oLatestCheckIn ? oLatestCheckIn.selfRating : oAssessment.selfRating),
-            latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : "")
-          });
-        }.bind(this));
+        
+var aOKRs = aResults[1].map(function (oOKR) {
+
+  var oCycle = aCycles.find(function (oItem) {
+    return oItem.ID === oOKR.cycle_ID;
+  });
+
+  return Object.assign({}, oOKR, {
+    cycleText: oCycle ? (oCycle.year + " / " + oCycle.quarter) : ""
+  });
+
+});
+
+
+        // var aAllAssessments = aResults[3].filter(function (oAssessment) {
+        //   return oAssessment.employee_ID === sEmployeeId;
+        // });
+        // var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
+        //   return oCheckIn.employee_ID === sEmployeeId;
+        // });
+        // var aEmployees = aResults[5];
+        // var oEmployee = aEmployees.find(function (oEntry) {
+        //   return oEntry.ID === sEmployeeId;
+        // });
+        // var oManager = aEmployees.find(function (oEntry) {
+        //   return oEntry.ID === (oEmployee && oEmployee.manager_ID);
+        // });
+        // var sSelectedCycleId = oViewModel.getProperty("/selectedCycleId") || (this.getCurrentCycle(aCycles) || {}).ID || "";
+        // var oCycle = aCycles.find(function (oEntry) {
+        //   return oEntry.ID === sSelectedCycleId;
+        // }) || this.getCurrentCycle(aCycles);
+        // var aGoals = aAllGoals.filter(function (oGoal) {
+        //   return oGoal.cycle_ID === (oCycle && oCycle.ID);
+        // });
+        // var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
+        //   return oCheckIn.cycle_ID === (oCycle && oCycle.ID);
+        // });
+        // var aAssessments = aAllAssessments.filter(function (oAssessment) {
+        //   return oAssessment.cycle_ID === (oCycle && oCycle.ID);
+        // }).map(function (oAssessment) {
+        //   var oLatestCheckIn = this._getLatestCheckIn(aCheckIns);
+        //   return Object.assign({}, oAssessment, {
+        //     latestSelfAssessmentText: oLatestCheckIn ? oLatestCheckIn.notes : (oAssessment.comments || ""),
+        //     latestSelfRatingLabel: this._formatSelfRating(oLatestCheckIn ? oLatestCheckIn.selfRating : oAssessment.selfRating),
+        //     latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : "")
+        //   });
+        // }.bind(this));
+        
+var aAllAssessments = aResults[3].filter(function (oAssessment) {
+  return oAssessment.employee_ID === sEmployeeId;
+});
+
+var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
+  return oCheckIn.employee_ID === sEmployeeId;
+});
+
+var aEmployees = aResults[5];
+
+var oEmployee = aEmployees.find(function (oEntry) {
+  return oEntry.ID === sEmployeeId;
+});
+
+var oManager = aEmployees.find(function (oEntry) {
+  return oEntry.ID === (oEmployee && oEmployee.manager_ID);
+});
+
+var sSelectedCycleId =
+  oViewModel.getProperty("/selectedCycleId") ||
+  (this.getCurrentCycle(aCycles) || {}).ID || "";
+
+var oCycle = aCycles.find(function (oEntry) {
+  return oEntry.ID === sSelectedCycleId;
+}) || this.getCurrentCycle(aCycles);
+
+var aGoals = aAllGoals.filter(function (oGoal) {
+  return oGoal.cycle_ID === (oCycle && oCycle.ID);
+});
+
+var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
+  return oCheckIn.cycle_ID === (oCycle && oCycle.ID);
+});
+
+
+        
+var aAssessments = aAllAssessments
+  .filter(function (oAssessment) {
+    return oAssessment.finalStatus === "Finalized";
+  })
+  .sort(function (a, b) {
+
+    if (a.cycle_ID === (oCycle && oCycle.ID)) {
+      return -1;
+    }
+
+    if (b.cycle_ID === (oCycle && oCycle.ID)) {
+      return 1;
+    }
+
+    return 0;
+
+  })
+  .map(function (oAssessment) {
+
+    return Object.assign({}, oAssessment, {
+
+      latestSelfAssessmentText: "",
+
+      latestSelfRatingLabel:
+        this._formatSelfRating(
+          oAssessment.selfRating
+        ),
+
+      latestManagerFeedback:
+        oAssessment.managerComments || ""
+
+    });
+
+  }.bind(this));
+
+
+
+
+
+
+
+
+
+
         var oAssessment = aAssessments[0] || null;
         var aDecoratedCheckIns = aCheckIns.map(function (oCheckIn) {
           return Object.assign({}, oCheckIn, {
             selfRatingLabel: this._formatSelfRating(oCheckIn.selfRating)
           });
         }.bind(this));
+
+
+
+
+
 
         oViewModel.setData({
           busy: false,

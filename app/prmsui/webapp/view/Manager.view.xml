@@ -28,16 +28,24 @@
 
         <Panel headerText="Company OKRs" class="sapUiSmallMarginBottom">
           <Table items="{view>/okrs}">
-            <columns>
-              <Column><Text text="Title" /></Column>
-              <Column><Text text="Description" /></Column>
-            </columns>
+          
+<columns>
+  <Column><Text text="Title" /></Column>
+  <Column><Text text="Description" /></Column>
+  <Column><Text text="Year / Quarter" /></Column>
+</columns>
+
+
             <items>
               <ColumnListItem>
-                <cells>
-                  <Text text="{view>title}" />
-                  <Text text="{view>description}" wrapping="true" />
-                </cells>
+              
+<cells>
+  <Text text="{view>title}" />
+  <Text text="{view>description}" wrapping="true" />
+  <Text text="{view>cycleText}" />
+</cells>
+
+
               </ColumnListItem>
             </items>
           </Table>
@@ -110,7 +118,7 @@
               <Column><Text text="Employee" /></Column>
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
-              <Column><Text text="Employee Comments" /></Column>
+            
               <Column><Text text="Manager Feedback" /></Column>
               <Column><Text text="Status" /></Column>
               <Column><Text text="Actions" /></Column>
@@ -121,7 +129,7 @@
                   <Text text="{view>employeeName}" />
                   <Text text="{= ${view>latestCheckInSelfRatingLabel} || ${view>selfRating} }" />
                   <RatingIndicator value="{view>managerRating}" maxValue="5" change=".onManagerRatingChange" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-                  <Text text="{= ${view>latestCheckInNotes} || ${view>comments} }" wrapping="true" />
+                 
                   <TextArea value="{view>managerComments}" rows="2" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
                   <ObjectStatus text="{view>finalStatus}" state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                   <HBox>

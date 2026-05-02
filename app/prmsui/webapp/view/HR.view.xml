@@ -28,45 +28,81 @@
             </VBox>
           </HBox>
         </Panel>
+        <VBox class="sapUiSmallMarginTop">
+    <Title text="Create Appraisal Cycle" level="H5"/>
+
+    <Input placeholder="Year"
+        value="{view>/cycleDraft/year}" />
+
+    <Select selectedKey="{view>/cycleDraft/quarter}">
+        <core:Item key="Q1" text="Q1"/>
+        <core:Item key="Q2" text="Q2"/>
+        <core:Item key="Q3" text="Q3"/>
+        <core:Item key="Q4" text="Q4"/>
+    </Select>
+
+    <Button text="Create Cycle"
+        type="Emphasized"
+        press=".onCreateCycle"
+        class="sapUiTinyMarginTop"/>
+</VBox>
 
         <Panel headerText="Create Employee" class="sapUiSmallMarginBottom">
           <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
             <Label text="Name" />
             <Input value="{view>/employeeDraft/name}" />
+            <Label text="Email ID" />
+<Input value="{view>/employeeDraft/emailId}" />
             <Label text="Role" />
             <Select selectedKey="{view>/employeeDraft/role}">
               <core:Item key="Employee" text="Employee" />
               <core:Item key="Manager" text="Manager" />
               <core:Item key="HR" text="HR" />
             </Select>
-            <Label text="Manager" />
-            <Select selectedKey="{view>/employeeDraft/manager_ID}" items="{view>/managers}">
-              <core:Item key="{view>ID}" text="{view>name}" />
-            </Select>
+         
+<Label
+  text="Manager"
+  visible="{= ${view>/employeeDraft/role} !== 'HR' }" />
+
+<Select
+  selectedKey="{view>/employeeDraft/manager_ID}"
+  items="{view>/managers}"
+  visible="{= ${view>/employeeDraft/role} !== 'HR' }">
+
+  <core:Item key="{view>ID}" text="{view>name}" />
+</Select>
+
+
           </form:SimpleForm>
           <Toolbar>
             <Button text="Create Employee" type="Emphasized" press=".onCreateEmployee" />
           </Toolbar>
         </Panel>
 
-        <Panel headerText="Employees &amp; Managers" class="sapUiSmallMarginBottom">
-          <Table items="{view>/employees}">
-            <columns>
-              <Column><Text text="Name" /></Column>
-              <Column><Text text="Role" /></Column>
-              <Column><Text text="Manager ID" /></Column>
-            </columns>
-            <items>
-              <ColumnListItem>
-                <cells>
-                  <Text text="{view>name}" />
-                  <Text text="{view>role}" />
-                  <Text text="{view>manager_ID}" />
-                </cells>
-              </ColumnListItem>
-            </items>
-          </Table>
-        </Panel>
+       
+<Panel headerText="Employees &amp; Managers" class="sapUiSmallMarginBottom">
+  <Table items="{view>/employees}">
+    <columns>
+      <Column><Text text="Name" /></Column>
+      <Column><Text text="Email ID" /></Column>
+      <Column><Text text="Role" /></Column>
+      <Column><Text text="Manager ID" /></Column>
+    </columns>
+
+    <items>
+      <ColumnListItem>
+        <cells>
+          <Text text="{view>name}" />
+          <Text text="{view>emailId}" />
+          <Text text="{view>role}" />
+          <Text text="{view>manager_ID}" />
+        </cells>
+      </ColumnListItem>
+    </items>
+  </Table>
+</Panel>
+
+
 
         <Panel headerText="Create / Manage OKRs" class="sapUiSmallMarginBottom">
           <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
@@ -79,18 +115,26 @@
             <Button text="Create OKR" type="Emphasized" press=".onCreateOKR" />
           </Toolbar>
           <Table items="{view>/okrs}" class="sapUiSmallMarginTop">
-            <columns>
-              <Column><Text text="Title" /></Column>
-              <Column><Text text="Description" /></Column>
-              <Column><Text text="Save" /></Column>
-            </columns>
+           
+<columns>
+  <Column><Text text="Title" /></Column>
+  <Column><Text text="Description" /></Column>
+  <Column><Text text="Year / Quarter" /></Column>
+  <Column><Text text="Save" /></Column>
+</columns>
+
+
             <items>
               <ColumnListItem>
-                <cells>
-                  <Input value="{view>title}" />
-                  <TextArea value="{view>description}" rows="2" />
-                  <Button text="Save" press=".onSaveOKR" />
-                </cells>
+              
+<cells>
+  <Input value="{view>title}" />
+  <TextArea value="{view>description}" rows="2" />
+  <Text text="{view>cycleText}" />
+  <Button text="Save" press=".onSaveOKR" />
+</cells>
+
+
               </ColumnListItem>
             </items>
           </Table>

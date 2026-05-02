@@ -2,6 +2,7 @@
   "name": "prms",
   "version": "1.0.0",
   "dependencies": {
+    "@cap-js/hana": "^2.7.1",
     "@sap/cds": "^9",
     "axios": "^1.15.0"
   },
@@ -11,6 +12,13 @@
   "scripts": {
     "start": "cds-serve"
   },
+  "cds": {
+  "requires": {
+    "db": {
+      "kind": "hana"
+    }
+  }
+},
   "private": true,
   "sapux": []
 }

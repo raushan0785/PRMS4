@@ -2,21 +2,38 @@ namespace prms;
 
 using { cuid } from '@sap/cds/common';
 
+
 entity Employee : cuid {
   name        : String(111);
+
+  emailId     : String(255);
+
   role        : String(20) enum {
     Employee;
     Manager;
     HR;
   };
+
   manager_ID  : UUID;
-  manager     : Association to Employee on manager.ID = $self.manager_ID;
+
+  manager     : Association to Employee
+                  on manager.ID = $self.manager_ID;
 }
+
+
+
 
 entity OKR : cuid {
   title       : String(150);
   description : String(1000);
+
+  cycle_ID    : UUID;
+
+  cycle       : Association to AppraisalCycle
+                  on cycle.ID = $self.cycle_ID;
 }
+
+
 
 entity AppraisalCycle : cuid {
   year        : Integer;
