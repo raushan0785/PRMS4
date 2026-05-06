@@ -4,75 +4,148 @@
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
   xmlns:mvc="sap.ui.core.mvc">
+
   <Page title="Manager Workspace" class="sapUiContentPadding">
     <headerContent>
       <ObjectStatus text="{session>/fullName}" state="Information" />
       <Button text="Logout" press=".onLogout" />
     </headerContent>
+
     <content>
       <VBox class="sapUiSmallMargin">
         <Panel headerText="Appraisal Cycle" class="sapUiSmallMarginBottom">
           <VBox>
             <Title text="{view>/cycleText}" level="H4" />
-            <Select selectedKey="{view>/selectedCycleId}" change=".onCycleChange" items="{view>/cycles}" width="14rem" class="sapUiTinyMarginTop">
-              <core:Item key="{view>ID}" text="{= ${view>year} + ' - ' + ${view>quarter} }" />
+
+            <Select
+              selectedKey="{view>/selectedYear}"
+              change=".onYearChange"
+              items="{view>/years}"
+              width="14rem"
+              class="sapUiTinyMarginTop">
+              <core:Item key="{view>}" text="{view>}" />
             </Select>
           </VBox>
         </Panel>
 
         <Panel headerText="Team Members" class="sapUiSmallMarginBottom">
           <List items="{view>/teamMembers}">
-            <StandardListItem title="{view>name}" description="{view>role}" />
+            <StandardListItem
+              title="{view>name}"
+              description="{view>role}"
+              type="Active"
+              press=".onTeamMemberPress" />
           </List>
         </Panel>
 
-        <Panel headerText="Company OKRs" class="sapUiSmallMarginBottom">
-          <Table items="{view>/okrs}">
-          
-<columns>
-  <Column><Text text="Title" /></Column>
-  <Column><Text text="Description" /></Column>
-  <Column><Text text="Year / Quarter" /></Column>
-</columns>
+        <Panel
+          headerText="{= ${view>/selectedEmployeeName} ? 'Selected Employee: ' + ${view>/selectedEmployeeName} : 'Select Employee' }"
+          class="sapUiSmallMarginBottom"
+          visible="{= !!${view>/selectedEmployeeId} }">
 
+          <Toolbar>
+            <Button
+              text="Company OKRs"
+              type="{= ${view>/selectedManagerSection} === 'okrs' ? 'Emphasized' : 'Default' }"
+              press=".onManagerSectionSelect">
+              <customData>
+                <core:CustomData key="section" value="okrs" />
+              </customData>
+            </Button>
+
+            <Button
+              text="Employee Goals"
+              type="{= ${view>/selectedManagerSection} === 'goals' ? 'Emphasized' : 'Default' }"
+              press=".onManagerSectionSelect">
+              <customData>
+                <core:CustomData key="section" value="goals" />
+              </customData>
+            </Button>
+
+            <Button
+              text="Employee Check-Ins"
+              type="{= ${view>/selectedManagerSection} === 'checkins' ? 'Emphasized' : 'Default' }"
+              press=".onManagerSectionSelect">
+              <customData>
+                <core:CustomData key="section" value="checkins" />
+              </customData>
+            </Button>
+
+            <Button
+              text="Self-Assessment Review &amp; Final Rating"
+              type="{= ${view>/selectedManagerSection} === 'assessment' ? 'Emphasized' : 'Default' }"
+              press=".onManagerSectionSelect">
+              <customData>
+                <core:CustomData key="section" value="assessment" />
+              </customData>
+            </Button>
+          </Toolbar>
+        </Panel>
+
+        <Panel
+          headerText="Company OKRs"
+          class="sapUiSmallMarginBottom"
+          visible="{= ${view>/selectedManagerSection} === 'okrs' &amp;&amp; !!${view>/selectedEmployeeId} }">
+          <Table items="{view>/okrs}">
+            <columns>
+              <Column><Text text="Title" /></Column>
+              <Column><Text text="Description" /></Column>
+              <Column><Text text="Year / Quarter" /></Column>
+            </columns>
 
             <items>
               <ColumnListItem>
-              
-<cells>
-  <Text text="{view>title}" />
-  <Text text="{view>description}" wrapping="true" />
-  <Text text="{view>cycleText}" />
-</cells>
-
-
+                <cells>
+                  <Text text="{view>title}" />
+                  <Text text="{view>description}" wrapping="true" />
+                  <Text text="{view>cycleText}" />
+                </cells>
               </ColumnListItem>
             </items>
           </Table>
         </Panel>
 
-        <Panel headerText="Employee Goals" class="sapUiSmallMarginBottom">
-          <Table items="{view>/teamGoals}">
+        <Panel
+          headerText="Employee Goals"
+          class="sapUiSmallMarginBottom"
+          visible="{= ${view>/selectedManagerSection} === 'goals' &amp;&amp; !!${view>/selectedEmployeeId} }">
+          <Table items="{view>/selectedTeamGoals}">
             <columns>
               <Column><Text text="Employee" /></Column>
               <Column><Text text="Goal" /></Column>
               <Column><Text text="Cycle" /></Column>
+              <Column><Text text="Start Date" /></Column>
+              <Column><Text text="End Date" /></Column>
               <Column><Text text="Type" /></Column>
               <Column><Text text="Status" /></Column>
               <Column><Text text="Submission" /></Column>
               <Column><Text text="Manager Comment" /></Column>
+              <Column><Text text="Quarter Check-In" /></Column>
               <Column><Text text="Actions" /></Column>
             </columns>
+
             <items>
               <ColumnListItem>
                 <cells>
                   <Text text="{view>employeeName}" />
                   <Text text="{view>title}" />
-                  <Text text="{= ${view>cycle_ID} ? ${view>/cycleText} : '' }" />
+                  <Text text="{view>cycleText}" />
+                  <Text text="{view>startDate}" />
+                  <Text text="{view>endDate}" />
                   <Text text="{view>type}" />
                   <Text text="{= ${view>progress} + '% / ' + ${view>status} }" />
-                  <ObjectStatus text="{view>submissionStatus}" state="{= ${view>submissionStatus} === 'Approved' ? 'Success' : ${view>submissionStatus} === 'Rejected' ? 'Error' : 'Information' }" />
+
+                  <ObjectStatus
+                    text="{view>submissionStatus}"
+                    state="{= ${view>submissionStatus} === 'Approved' ? 'Success' : ${view>submissionStatus} === 'Rejected' ? 'Error' : 'Information' }" />
+
                   <Input value="{view>managerComment}" placeholder="Add approval or rejection note" />
+
+                  <Button
+                    text="{= ${view>checkInClosed} ? 'Closed' : 'Close Check-In' }"
+                    press=".onCloseGoalCheckIn"
+                    enabled="{= !${view>checkInClosed} }" />
+
                   <HBox>
                     <Button text="Approve" press=".onApproveGoal" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Rejected' }" />
                     <Button text="Reject" press=".onRejectGoal" class="sapUiTinyMarginBegin" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Approved' }" />
@@ -83,8 +156,11 @@
           </Table>
         </Panel>
 
-        <Panel headerText="Employee Check-Ins" class="sapUiSmallMarginBottom">
-          <Table items="{view>/teamCheckIns}">
+        <Panel
+          headerText="Employee Check-Ins"
+          class="sapUiSmallMarginBottom"
+          visible="{= ${view>/selectedManagerSection} === 'checkins' &amp;&amp; !!${view>/selectedEmployeeId} }">
+          <Table items="{view>/selectedTeamCheckIns}">
             <columns>
               <Column><Text text="Employee" /></Column>
               <Column><Text text="Goal" /></Column>
@@ -95,6 +171,7 @@
               <Column><Text text="Manager Comment" /></Column>
               <Column><Text text="Save" /></Column>
             </columns>
+
             <items>
               <ColumnListItem>
                 <cells>
@@ -112,26 +189,40 @@
           </Table>
         </Panel>
 
-        <Panel headerText="Self-Assessment Review &amp; Final Rating">
-          <Table items="{view>/assessments}">
+        <Panel
+          headerText="Self-Assessment Review &amp; Final Rating"
+          visible="{= ${view>/selectedManagerSection} === 'assessment' &amp;&amp; !!${view>/selectedEmployeeId} }">
+          <Table items="{view>/selectedAssessments}">
             <columns>
               <Column><Text text="Employee" /></Column>
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
-            
               <Column><Text text="Manager Feedback" /></Column>
               <Column><Text text="Status" /></Column>
               <Column><Text text="Actions" /></Column>
             </columns>
+
             <items>
               <ColumnListItem>
                 <cells>
                   <Text text="{view>employeeName}" />
                   <Text text="{= ${view>latestCheckInSelfRatingLabel} || ${view>selfRating} }" />
-                  <RatingIndicator value="{view>managerRating}" maxValue="5" change=".onManagerRatingChange" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-                 
-                  <TextArea value="{view>managerComments}" rows="2" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-                  <ObjectStatus text="{view>finalStatus}" state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+
+                  <RatingIndicator
+                    value="{view>managerRating}"
+                    maxValue="5"
+                    change=".onManagerRatingChange"
+                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
+
+                  <TextArea
+                    value="{view>managerComments}"
+                    rows="2"
+                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
+
+                  <ObjectStatus
+                    text="{view>finalStatus}"
+                    state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+
                   <HBox>
                     <Button text="Save Feedback" press=".onSaveAssessmentFeedback" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
                     <Button text="Final Submit" press=".onFinalizeAssessment" class="sapUiTinyMarginBegin" enabled="{= ${view>finalStatus} !== 'Finalized' }" />

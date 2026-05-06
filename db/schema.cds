@@ -2,26 +2,21 @@ namespace prms;
 
 using { cuid } from '@sap/cds/common';
 
-
 entity Employee : cuid {
-  name        : String(111);
+  name       : String(111);
+  emailId    : String(255);
 
-  emailId     : String(255);
-
-  role        : String(20) enum {
+  role       : String(20) enum {
     Employee;
     Manager;
     HR;
   };
 
-  manager_ID  : UUID;
+  manager_ID : UUID;
 
-  manager     : Association to Employee
-                  on manager.ID = $self.manager_ID;
+  manager    : Association to Employee
+                 on manager.ID = $self.manager_ID;
 }
-
-
-
 
 entity OKR : cuid {
   title       : String(150);
@@ -33,49 +28,57 @@ entity OKR : cuid {
                   on cycle.ID = $self.cycle_ID;
 }
 
-
-
 entity AppraisalCycle : cuid {
   year        : Integer;
+
   quarter     : String(2) enum {
     Q1;
     Q2;
     Q3;
     Q4;
   };
+
   status      : String(20) enum {
     Open;
     Closed;
   };
+
   goalsOpen   : Boolean default true;
   checkInOpen : Boolean default true;
   isCurrent   : Boolean default true;
 }
 
 entity Goal : cuid {
-  title       : String(150);
-  description : String(1000);
-  type        : String(20) enum {
+  title            : String(150);
+  description      : String(1000);
+
+  type             : String(20) enum {
     Performance;
     Development;
   };
-  status      : String(30);
-  progress    : Integer;
+
+  status           : String(30);
+  progress         : Integer;
+  startDate        : Date;
+  endDate          : Date;
+  checkInClosed    : Boolean default false;
+
   submissionStatus : String(20) enum {
     Draft;
     Submitted;
     Approved;
     Rejected;
   } default 'Draft';
+
   managerComment   : String(1000);
 
-  employee_ID : UUID;
-  okr_ID      : UUID;
-  cycle_ID    : UUID;
+  employee_ID      : UUID;
+  okr_ID           : UUID;
+  cycle_ID         : UUID;
 
-  employee    : Association to Employee on employee.ID = $self.employee_ID;
-  okr         : Association to OKR on okr.ID = $self.okr_ID;
-  cycle       : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
+  employee         : Association to Employee on employee.ID = $self.employee_ID;
+  okr              : Association to OKR on okr.ID = $self.okr_ID;
+  cycle            : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
 }
 
 annotate Goal with @(
@@ -91,6 +94,7 @@ annotate Goal with @(
       Value : status
     }
   },
+
   UI.SelectionFields : [
     title,
     type,
@@ -98,6 +102,7 @@ annotate Goal with @(
     employee,
     okr
   ],
+
   UI.LineItem : [
     {
       $Type : 'UI.DataField',
@@ -116,10 +121,21 @@ annotate Goal with @(
     },
     {
       $Type : 'UI.DataField',
+      Value : startDate,
+      Label : 'Start Date'
+    },
+    {
+      $Type : 'UI.DataField',
+      Value : endDate,
+      Label : 'End Date'
+    },
+    {
+      $Type : 'UI.DataField',
       Value : progress,
       Label : 'Progress (%)'
     }
   ],
+
   UI.FieldGroup #Overview : {
     Data : [
       {
@@ -139,11 +155,22 @@ annotate Goal with @(
       },
       {
         $Type : 'UI.DataField',
+        Value : startDate,
+        Label : 'Start Date'
+      },
+      {
+        $Type : 'UI.DataField',
+        Value : endDate,
+        Label : 'End Date'
+      },
+      {
+        $Type : 'UI.DataField',
         Value : progress,
         Label : 'Progress (%)'
       }
     ]
   },
+
   UI.FieldGroup #Alignment : {
     Data : [
       {
@@ -158,6 +185,7 @@ annotate Goal with @(
       }
     ]
   },
+
   UI.Facets : [
     {
       $Type  : 'UI.ReferenceFacet',
@@ -181,18 +209,22 @@ entity CheckIn : cuid {
     Q3;
     Q4;
   };
+
   status        : String(30);
   comments      : String(1000);
   notes         : String(1000);
+
   focusArea     : String(30) enum {
     Delivery;
     Collaboration;
     Learning;
     Quality;
   };
+
   selfRating    : Integer;
   progress      : Integer;
   checkInDate   : DateTime;
+
   employeeAcknowledged : Boolean default false;
   resubmittedOnce      : Boolean default false;
 
@@ -215,6 +247,7 @@ entity Assessment : cuid {
   managerComments : String(1000);
   comments        : String(1000);
   sendBackCount   : Integer default 0;
+
   finalStatus     : String(20) enum {
     Open;
     Finalized;

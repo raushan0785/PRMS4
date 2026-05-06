@@ -9,11 +9,14 @@ sap.ui.define([
       this.getView().setModel(this.createViewModel({
         busy: false,
         cycles: [],
-        selectedCycleId: "",
+        years: [],
+        selectedYear: "",
+        selectedEmployeeSection: "okrs",
         cycleText: "",
         cycle: null,
         okrs: [],
         goals: [],
+        checkInGoals: [],
         checkIns: [],
         assessments: [],
         managerName: "",
@@ -44,6 +47,7 @@ sap.ui.define([
     _loadData: async function () {
       var oViewModel = this.getView().getModel("view");
       var sEmployeeId = this.getSessionModel().getProperty("/employeeId");
+      var sSelectedEmployeeSection = oViewModel.getProperty("/selectedEmployeeSection") || "okrs";
 
       oViewModel.setProperty("/busy", true);
 
@@ -57,168 +61,131 @@ sap.ui.define([
           this.requestCollection("/Employees")
         ]);
 
+        var aCycles = aResults[2];
+
+        var aYears = [];
+        aCycles.forEach(function (oCycleRow) {
+          if (aYears.indexOf(String(oCycleRow.year)) === -1) {
+            aYears.push(String(oCycleRow.year));
+          }
+        });
+        aYears.sort();
+
+        var sSelectedYear =
+          oViewModel.getProperty("/selectedYear") ||
+          String((this.getCurrentCycle(aCycles) || {}).year || aYears[0] || "");
+
+        var aSelectedYearCycles = aCycles.filter(function (oCycleRow) {
+          return String(oCycleRow.year) === String(sSelectedYear);
+        });
+
+        var aSelectedCycleIds = aSelectedYearCycles.map(function (oCycleRow) {
+          return oCycleRow.ID;
+        });
+
+        var oCycle = aSelectedYearCycles[0] || null;
+
         var aAllGoals = aResults[0].filter(function (oGoal) {
           return oGoal.employee_ID === sEmployeeId;
         });
-        
-        var aCycles = aResults[2];
-        
-var aOKRs = aResults[1].map(function (oOKR) {
 
-  var oCycle = aCycles.find(function (oItem) {
-    return oItem.ID === oOKR.cycle_ID;
-  });
+        var aOKRs = aResults[1]
+          .filter(function (oOKR) {
+            return aSelectedCycleIds.indexOf(oOKR.cycle_ID) !== -1;
+          })
+          .map(function (oOKR) {
+            var oOKRCycle = aCycles.find(function (oItem) {
+              return oItem.ID === oOKR.cycle_ID;
+            });
 
-  return Object.assign({}, oOKR, {
-    cycleText: oCycle ? (oCycle.year + " / " + oCycle.quarter) : ""
-  });
+            return Object.assign({}, oOKR, {
+              cycleText: oOKRCycle ? (oOKRCycle.year) : ""
+            });
+          });
 
-});
+        var aAllAssessments = aResults[3].filter(function (oAssessment) {
+          return oAssessment.employee_ID === sEmployeeId;
+        });
 
+        var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
+          return oCheckIn.employee_ID === sEmployeeId;
+        });
 
-        // var aAllAssessments = aResults[3].filter(function (oAssessment) {
-        //   return oAssessment.employee_ID === sEmployeeId;
-        // });
-        // var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
-        //   return oCheckIn.employee_ID === sEmployeeId;
-        // });
-        // var aEmployees = aResults[5];
-        // var oEmployee = aEmployees.find(function (oEntry) {
-        //   return oEntry.ID === sEmployeeId;
-        // });
-        // var oManager = aEmployees.find(function (oEntry) {
-        //   return oEntry.ID === (oEmployee && oEmployee.manager_ID);
-        // });
-        // var sSelectedCycleId = oViewModel.getProperty("/selectedCycleId") || (this.getCurrentCycle(aCycles) || {}).ID || "";
-        // var oCycle = aCycles.find(function (oEntry) {
-        //   return oEntry.ID === sSelectedCycleId;
-        // }) || this.getCurrentCycle(aCycles);
-        // var aGoals = aAllGoals.filter(function (oGoal) {
-        //   return oGoal.cycle_ID === (oCycle && oCycle.ID);
-        // });
-        // var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
-        //   return oCheckIn.cycle_ID === (oCycle && oCycle.ID);
-        // });
-        // var aAssessments = aAllAssessments.filter(function (oAssessment) {
-        //   return oAssessment.cycle_ID === (oCycle && oCycle.ID);
-        // }).map(function (oAssessment) {
-        //   var oLatestCheckIn = this._getLatestCheckIn(aCheckIns);
-        //   return Object.assign({}, oAssessment, {
-        //     latestSelfAssessmentText: oLatestCheckIn ? oLatestCheckIn.notes : (oAssessment.comments || ""),
-        //     latestSelfRatingLabel: this._formatSelfRating(oLatestCheckIn ? oLatestCheckIn.selfRating : oAssessment.selfRating),
-        //     latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : "")
-        //   });
-        // }.bind(this));
-        
-var aAllAssessments = aResults[3].filter(function (oAssessment) {
-  return oAssessment.employee_ID === sEmployeeId;
-});
+        var aEmployees = aResults[5];
 
-var aAllCheckIns = aResults[4].filter(function (oCheckIn) {
-  return oCheckIn.employee_ID === sEmployeeId;
-});
+        var oEmployee = aEmployees.find(function (oEntry) {
+          return oEntry.ID === sEmployeeId;
+        });
 
-var aEmployees = aResults[5];
+        var oManager = aEmployees.find(function (oEntry) {
+          return oEntry.ID === (oEmployee && oEmployee.manager_ID);
+        });
 
-var oEmployee = aEmployees.find(function (oEntry) {
-  return oEntry.ID === sEmployeeId;
-});
+        var aGoals = aAllGoals
+          .filter(function (oGoal) {
+            return aSelectedCycleIds.indexOf(oGoal.cycle_ID) !== -1;
+          })
+          .map(function (oGoal) {
+            var oGoalCycle = aCycles.find(function (oCycleRow) {
+              return oCycleRow.ID === oGoal.cycle_ID;
+            });
 
-var oManager = aEmployees.find(function (oEntry) {
-  return oEntry.ID === (oEmployee && oEmployee.manager_ID);
-});
+            return Object.assign({}, oGoal, {
+              quarter: oGoalCycle ? oGoalCycle.quarter : ""
+            });
+          });
 
-var sSelectedCycleId =
-  oViewModel.getProperty("/selectedCycleId") ||
-  (this.getCurrentCycle(aCycles) || {}).ID || "";
+        var aCheckInGoals = aGoals.filter(function (oGoal) {
+          return !oGoal.checkInClosed;
+        });
 
-var oCycle = aCycles.find(function (oEntry) {
-  return oEntry.ID === sSelectedCycleId;
-}) || this.getCurrentCycle(aCycles);
+        var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
+          return aSelectedCycleIds.indexOf(oCheckIn.cycle_ID) !== -1;
+        });
 
-var aGoals = aAllGoals.filter(function (oGoal) {
-  return oGoal.cycle_ID === (oCycle && oCycle.ID);
-});
-
-var aCheckIns = aAllCheckIns.filter(function (oCheckIn) {
-  return oCheckIn.cycle_ID === (oCycle && oCycle.ID);
-});
-
-
-        
-var aAssessments = aAllAssessments
-  .filter(function (oAssessment) {
-    return oAssessment.finalStatus === "Finalized";
-  })
-  .sort(function (a, b) {
-
-    if (a.cycle_ID === (oCycle && oCycle.ID)) {
-      return -1;
-    }
-
-    if (b.cycle_ID === (oCycle && oCycle.ID)) {
-      return 1;
-    }
-
-    return 0;
-
-  })
-  .map(function (oAssessment) {
-
-    return Object.assign({}, oAssessment, {
-
-      latestSelfAssessmentText: "",
-
-      latestSelfRatingLabel:
-        this._formatSelfRating(
-          oAssessment.selfRating
-        ),
-
-      latestManagerFeedback:
-        oAssessment.managerComments || ""
-
-    });
-
-  }.bind(this));
-
-
-
-
-
-
-
-
-
+        var aAssessments = aAllAssessments
+          .filter(function (oAssessment) {
+            return oAssessment.finalStatus === "Finalized" &&
+              aSelectedCycleIds.indexOf(oAssessment.cycle_ID) !== -1;
+          })
+          .map(function (oAssessment) {
+            return Object.assign({}, oAssessment, {
+              latestSelfAssessmentText: "",
+              latestSelfRatingLabel: this._formatSelfRating(oAssessment.selfRating),
+              latestManagerFeedback: oAssessment.managerComments || ""
+            });
+          }.bind(this));
 
         var oAssessment = aAssessments[0] || null;
+
         var aDecoratedCheckIns = aCheckIns.map(function (oCheckIn) {
           return Object.assign({}, oCheckIn, {
             selfRatingLabel: this._formatSelfRating(oCheckIn.selfRating)
           });
         }.bind(this));
 
-
-
-
-
-
         oViewModel.setData({
           busy: false,
           cycles: aCycles,
-          selectedCycleId: oCycle ? oCycle.ID : "",
+          years: aYears,
+          selectedYear: sSelectedYear,
+          selectedEmployeeSection: sSelectedEmployeeSection,
           cycle: oCycle,
-          cycleText: this.formatCycleText(oCycle),
+          cycleText: sSelectedYear,
           okrs: aOKRs,
           goals: aGoals,
+          checkInGoals: aCheckInGoals,
           checkIns: aDecoratedCheckIns,
           assessments: aAssessments,
           managerName: oManager ? oManager.name : "Not assigned",
           goalDraft: this._getEmptyGoalDraft(),
-          checkInDraft: this._getEmptyCheckInDraft(aGoals),
+          checkInDraft: this._getEmptyCheckInDraft(aCheckInGoals),
           editingCheckInId: "",
           stats: {
-            canEditGoals: !!(oCycle && oCycle.goalsOpen),
-            canEditCheckIns: !!(oCycle && oCycle.checkInOpen),
+            canEditGoals: aSelectedYearCycles.some(function (oCycleRow) {
+              return !!oCycleRow.goalsOpen;
+            }),
+            canEditCheckIns: aCheckInGoals.length > 0,
             canSendBack: !!(oAssessment && oAssessment.finalStatus === "Finalized" && (oAssessment.sendBackCount || 0) < 1),
             hasAssessment: !!oAssessment,
             hasFinalizedAssessment: !!(oAssessment && oAssessment.finalStatus === "Finalized")
@@ -236,7 +203,9 @@ var aAssessments = aAllAssessments
         description: "",
         type: "Development",
         status: "Open",
-        progress: 0,
+        startDate: "",
+        endDate: "",
+        quarter: "Q1",
         okr_ID: ""
       };
     },
@@ -270,14 +239,25 @@ var aAssessments = aAllAssessments
       })[0] || null;
     },
 
-    onCycleChange: async function (oEvent) {
-      this.getView().getModel("view").setProperty("/selectedCycleId", oEvent.getParameter("selectedItem").getKey());
+    onEmployeeSectionSelect: function (oEvent) {
+      var sSection = oEvent.getSource().data("section");
+      this.getView().getModel("view").setProperty("/selectedEmployeeSection", sSection);
+    },
+
+    onYearChange: async function (oEvent) {
+      this.getView().getModel("view").setProperty(
+        "/selectedYear",
+        oEvent.getParameter("selectedItem").getKey()
+      );
+
       await this._loadData();
     },
 
     onCreateGoal: async function () {
       var oViewModel = this.getView().getModel("view");
       var oDraft = oViewModel.getProperty("/goalDraft");
+      var aCycles = oViewModel.getProperty("/cycles") || [];
+      var sSelectedYear = oViewModel.getProperty("/selectedYear");
 
       if (!oDraft.title || !oDraft.type) {
         MessageBox.error("Enter the goal title and type.");
@@ -289,6 +269,26 @@ var aAssessments = aAllAssessments
         return;
       }
 
+      if (!oDraft.startDate || !oDraft.endDate) {
+        MessageBox.error("Select start date and end date.");
+        return;
+      }
+
+      if (new Date(oDraft.startDate).getTime() > new Date(oDraft.endDate).getTime()) {
+        MessageBox.error("Start date cannot be after end date.");
+        return;
+      }
+
+      var oGoalCycle = aCycles.find(function (oCycleRow) {
+        return String(oCycleRow.year) === String(sSelectedYear) &&
+          oCycleRow.quarter === oDraft.quarter;
+      });
+
+      if (!oGoalCycle) {
+        MessageBox.error("Selected quarter cycle was not found.");
+        return;
+      }
+
       oViewModel.setProperty("/busy", true);
 
       try {
@@ -297,11 +297,14 @@ var aAssessments = aAllAssessments
           description: oDraft.description,
           type: oDraft.type,
           status: oDraft.status,
-          progress: Number(oDraft.progress || 0),
+          progress: 0,
+          startDate: oDraft.startDate,
+          endDate: oDraft.endDate,
+          checkInClosed: false,
           employee_ID: this.getSessionModel().getProperty("/employeeId"),
           okr_ID: oDraft.okr_ID || null,
           submissionStatus: "Draft",
-          cycle_ID: oViewModel.getProperty("/selectedCycleId")
+          cycle_ID: oGoalCycle.ID
         });
 
         this.showToast("Goal created.");
@@ -349,11 +352,26 @@ var aAssessments = aAllAssessments
       var oViewModel = this.getView().getModel("view");
       var oDraft = oViewModel.getProperty("/checkInDraft");
       var sEditingCheckInId = oViewModel.getProperty("/editingCheckInId");
+      var aGoals = oViewModel.getProperty("/goals") || [];
+      var aCycles = oViewModel.getProperty("/cycles") || [];
 
       if (!oDraft.goal_ID || !oDraft.notes) {
         MessageBox.error("Select a goal and add a short update.");
         return;
       }
+
+      var oSelectedGoal = aGoals.find(function (oGoal) {
+        return oGoal.ID === oDraft.goal_ID;
+      });
+
+      if (oSelectedGoal && oSelectedGoal.checkInClosed) {
+        MessageBox.error("Quarterly check-in is closed for this goal.");
+        return;
+      }
+
+      var oGoalCycle = aCycles.find(function (oCycleRow) {
+        return oSelectedGoal && oCycleRow.ID === oSelectedGoal.cycle_ID;
+      });
 
       oViewModel.setProperty("/busy", true);
 
@@ -374,7 +392,7 @@ var aAssessments = aAllAssessments
           await this.createEntity("CheckIns", {
             goal_ID: oDraft.goal_ID,
             employee_ID: this.getSessionModel().getProperty("/employeeId"),
-            quarter: (oViewModel.getProperty("/cycle") || {}).quarter || "Q1",
+            quarter: (oGoalCycle && oGoalCycle.quarter) || "Q1",
             status: oDraft.status,
             comments: "",
             notes: oDraft.notes,
@@ -382,7 +400,7 @@ var aAssessments = aAllAssessments
             selfRating: Number(oDraft.selfRating),
             progress: Number(oDraft.progress || 0),
             checkInDate: new Date().toISOString(),
-            cycle_ID: oViewModel.getProperty("/selectedCycleId")
+            cycle_ID: oSelectedGoal ? oSelectedGoal.cycle_ID : null
           });
           this.showToast("Check-in submitted to your manager.");
         }
