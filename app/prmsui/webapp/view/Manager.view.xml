@@ -5,10 +5,10 @@
   xmlns:core="sap.ui.core"
   xmlns:mvc="sap.ui.core.mvc">
 
-  <Page title="Manager Workspace" class="sapUiContentPadding">
+  <Page title="Manager Workspace" class="prmsWorkspacePage sapUiContentPadding">
     <headerContent>
       <ObjectStatus text="{session>/fullName}" state="Information" />
-      <Button text="Logout" press=".onLogout" />
+      <Button text="Logout" icon="sap-icon://log" press=".onLogout" />
     </headerContent>
 
     <content>
@@ -46,6 +46,7 @@
           <Toolbar>
             <Button
               text="Company OKRs"
+              icon="sap-icon://target-group"
               type="{= ${view>/selectedManagerSection} === 'okrs' ? 'Emphasized' : 'Default' }"
               press=".onManagerSectionSelect">
               <customData>
@@ -55,6 +56,7 @@
 
             <Button
               text="Employee Goals"
+              icon="sap-icon://activity-items"
               type="{= ${view>/selectedManagerSection} === 'goals' ? 'Emphasized' : 'Default' }"
               press=".onManagerSectionSelect">
               <customData>
@@ -64,6 +66,7 @@
 
             <Button
               text="Employee Check-Ins"
+              icon="sap-icon://discussion"
               type="{= ${view>/selectedManagerSection} === 'checkins' ? 'Emphasized' : 'Default' }"
               press=".onManagerSectionSelect">
               <customData>
@@ -73,6 +76,7 @@
 
             <Button
               text="Self-Assessment Review &amp; Final Rating"
+              icon="sap-icon://performance"
               type="{= ${view>/selectedManagerSection} === 'assessment' ? 'Emphasized' : 'Default' }"
               press=".onManagerSectionSelect">
               <customData>
@@ -147,8 +151,8 @@
                     enabled="{= !${view>checkInClosed} }" />
 
                   <HBox>
-                    <Button text="Approve" press=".onApproveGoal" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Rejected' }" />
-                    <Button text="Reject" press=".onRejectGoal" class="sapUiTinyMarginBegin" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Approved' }" />
+                    <Button text="Approve" icon="sap-icon://accept" press=".onApproveGoal" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Rejected' }" />
+                    <Button text="Reject" icon="sap-icon://decline" press=".onRejectGoal" class="sapUiTinyMarginBegin" enabled="{= ${view>submissionStatus} === 'Submitted' || ${view>submissionStatus} === 'Approved' }" />
                   </HBox>
                 </cells>
               </ColumnListItem>
@@ -224,8 +228,8 @@
                     state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
 
                   <HBox>
-                    <Button text="Save Feedback" press=".onSaveAssessmentFeedback" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-                    <Button text="Final Submit" press=".onFinalizeAssessment" class="sapUiTinyMarginBegin" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
+                    <Button text="Save Feedback" icon="sap-icon://save" press=".onSaveAssessmentFeedback" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
+                    <Button text="Final Submit" icon="sap-icon://complete" type="Emphasized" press=".onFinalizeAssessment" class="sapUiTinyMarginBegin" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
                   </HBox>
                 </cells>
               </ColumnListItem>

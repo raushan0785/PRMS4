@@ -6,10 +6,10 @@
   xmlns:form="sap.ui.layout.form"
   xmlns:mvc="sap.ui.core.mvc">
 
-  <Page title="Employee Workspace" class="sapUiContentPadding">
+  <Page title="Employee Workspace" class="prmsWorkspacePage sapUiContentPadding">
     <headerContent>
       <ObjectStatus text="{session>/fullName}" state="Information" />
-      <Button text="Logout" press=".onLogout" />
+      <Button text="Logout" icon="sap-icon://log" press=".onLogout" />
     </headerContent>
 
     <content>
@@ -39,8 +39,9 @@
           </HBox>
 
           <Toolbar class="sapUiSmallMarginTop">
-            <Button
-              text="Company OKR"
+              <Button
+              text="Company OKRs"
+              icon="sap-icon://target-group"
               type="{= ${view>/selectedEmployeeSection} === 'okrs' ? 'Emphasized' : 'Default' }"
               press=".onEmployeeSectionSelect">
               <customData>
@@ -50,6 +51,7 @@
 
             <Button
               text="Create Goals"
+              icon="sap-icon://add-activity"
               type="{= ${view>/selectedEmployeeSection} === 'goals' ? 'Emphasized' : 'Default' }"
               press=".onEmployeeSectionSelect">
               <customData>
@@ -59,6 +61,7 @@
 
             <Button
               text="Quarterly Check-In"
+              icon="sap-icon://activity-individual"
               type="{= ${view>/selectedEmployeeSection} === 'checkins' ? 'Emphasized' : 'Default' }"
               press=".onEmployeeSectionSelect">
               <customData>
@@ -68,6 +71,7 @@
 
             <Button
               text="Manager Feedback and Final Rating"
+              icon="sap-icon://manager-insight"
               type="{= ${view>/selectedEmployeeSection} === 'feedback' ? 'Emphasized' : 'Default' }"
               press=".onEmployeeSectionSelect">
               <customData>

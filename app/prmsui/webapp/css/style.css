@@ -1,33 +1,217 @@
-.prmsLoginPage {
-  background: linear-gradient(145deg, #f7f9fc 0%, #eaf2fb 100%);
+:root {
+  --prms-bg: #f5f7fb;
+  --prms-surface: #ffffff;
+  --prms-surface-muted: #f8fafc;
+  --prms-border: #d9e2ec;
+  --prms-border-strong: #b8c6d6;
+  --prms-text: #17202a;
+  --prms-muted: #5f6f82;
+  --prms-brand: #0b5cab;
+  --prms-brand-strong: #074b8a;
+  --prms-good: #107e3e;
+  --prms-warning: #b45f06;
+  --prms-shadow: 0 0.75rem 2rem rgba(17, 34, 64, 0.08);
+}
+
+.prmsLoginPage,
+.prmsDashboardPage,
+.prmsWorkspacePage {
+  background:
+    radial-gradient(circle at top left, rgba(11, 92, 171, 0.08), transparent 24rem),
+    linear-gradient(180deg, #fbfcfe 0%, var(--prms-bg) 100%);
+}
+
+.prmsLoginPage .sapMPageEnableScrolling,
+.prmsDashboardPage .sapMPageEnableScrolling,
+.prmsWorkspacePage .sapMPageEnableScrolling {
+  background: transparent;
 }
 
 .prmsLoginShell {
   width: 100%;
-  max-width: 30rem;
-  padding: 1rem;
+  max-width: 29rem;
+  padding: 1.5rem;
+}
+
+.prmsLoginBrand {
+  padding: 0 0.25rem;
+}
+
+.prmsLoginBrand .sapUiIcon {
+  color: var(--prms-brand);
 }
 
 .prmsLoginCard {
-  border-radius: 1rem;
-  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--prms-border);
+  border-radius: 0.5rem;
+  box-shadow: var(--prms-shadow);
+  background: var(--prms-surface);
+}
+
+.prmsLoginCard .sapMPanelHdr,
+.prmsWorkspacePage .sapMPanelHdr,
+.prmsDashboardPage .sapMPanelHdr {
+  color: var(--prms-text);
+  font-weight: 700;
+}
+
+.prmsLoginCard .sapMInputBaseContentWrapper,
+.prmsWorkspacePage .sapMInputBaseContentWrapper,
+.prmsDashboardPage .sapMInputBaseContentWrapper,
+.prmsWorkspacePage .sapMSlt,
+.prmsDashboardPage .sapMSlt,
+.prmsWorkspacePage .sapMTextArea .sapMInputBaseContentWrapper,
+.prmsDashboardPage .sapMTextArea .sapMInputBaseContentWrapper {
+  border-color: var(--prms-border);
+  border-radius: 0.375rem;
+  background: #ffffff;
+}
+
+.prmsLoginCard .sapMInputBaseContentWrapper:hover,
+.prmsWorkspacePage .sapMInputBaseContentWrapper:hover,
+.prmsDashboardPage .sapMInputBaseContentWrapper:hover,
+.prmsWorkspacePage .sapMSlt:hover,
+.prmsDashboardPage .sapMSlt:hover {
+  border-color: var(--prms-brand);
+}
+
+.prmsDashboardPage .sapFDynamicPageTitle,
+.prmsDashboardPage .sapFDynamicPageHeader,
+.prmsWorkspacePage .sapMPageHeader {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid var(--prms-border);
+  box-shadow: 0 0.25rem 1rem rgba(17, 34, 64, 0.05);
 }
 
 .prmsDashboardPage .sapFDynamicPageContent,
 .prmsDashboardPage .sapFDynamicPageHeader {
-  background: #f8fafc;
+  background: transparent;
+}
+
+.prmsWorkspacePage .sapMPageTitle {
+  color: var(--prms-text);
+  font-weight: 700;
+}
+
+.prmsWorkspacePage .sapMPageEnableScrolling {
+  padding: 1.25rem;
 }
 
 .prmsCycleBanner {
   width: 100%;
   padding: 1rem 1.25rem;
-  border-radius: 0.9rem;
-  background: linear-gradient(90deg, #e0f2fe 0%, #f0fdf4 100%);
-  border: 1px solid #bae6fd;
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, rgba(11, 92, 171, 0.1) 0%, rgba(16, 126, 62, 0.08) 100%);
+  border: 1px solid var(--prms-border);
 }
 
-.prmsSectionToolbar {
-  border-radius: 0.75rem;
-  background: #ffffff;
-  border: 1px solid #dbe4f0;
+.prmsSectionToolbar,
+.prmsWorkspacePage .sapMTB,
+.prmsDashboardPage .sapMTB {
+  border-radius: 0.375rem;
+  background: var(--prms-surface);
+  border: 1px solid var(--prms-border);
+}
+
+.prmsWorkspacePage .sapMPanel,
+.prmsDashboardPage .sapMPanel {
+  border: 1px solid var(--prms-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.25rem 1rem rgba(17, 34, 64, 0.05);
+  background: var(--prms-surface);
+  overflow: hidden;
+}
+
+.prmsWorkspacePage .sapMPanelContent,
+.prmsDashboardPage .sapMPanelContent {
+  border-top-color: var(--prms-border);
+}
+
+.prmsWorkspacePage .sapMListTbl,
+.prmsDashboardPage .sapMListTbl {
+  border: 1px solid var(--prms-border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.prmsWorkspacePage .sapMListTblHeaderCell,
+.prmsDashboardPage .sapMListTblHeaderCell {
+  background: var(--prms-surface-muted);
+  color: var(--prms-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.prmsWorkspacePage .sapMListTblCell,
+.prmsDashboardPage .sapMListTblCell {
+  border-top: 1px solid #edf1f5;
+}
+
+.prmsWorkspacePage .sapMListTblRow:hover,
+.prmsDashboardPage .sapMListTblRow:hover {
+  background: #f8fbff;
+}
+
+.prmsDashboardPage .sapMGT {
+  border: 1px solid var(--prms-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.25rem 1rem rgba(17, 34, 64, 0.05);
+}
+
+.prmsDashboardPage .sapMGT:hover {
+  box-shadow: 0 0.75rem 1.5rem rgba(17, 34, 64, 0.1);
+}
+
+.prmsDashboardPage .sapMNCValue,
+.prmsDashboardPage .sapMNCScale {
+  color: var(--prms-brand);
+}
+
+.prmsWorkspacePage .sapMBtnEmphasized,
+.prmsDashboardPage .sapMBtnEmphasized,
+.prmsLoginCard .sapMBtnEmphasized {
+  background: var(--prms-brand);
+  border-color: var(--prms-brand);
+}
+
+.prmsWorkspacePage .sapMBtnEmphasized:hover,
+.prmsDashboardPage .sapMBtnEmphasized:hover,
+.prmsLoginCard .sapMBtnEmphasized:hover {
+  background: var(--prms-brand-strong);
+  border-color: var(--prms-brand-strong);
+}
+
+.prmsWorkspacePage .sapMObjStatusSuccess .sapMObjStatusText,
+.prmsDashboardPage .sapMObjStatusSuccess .sapMObjStatusText {
+  color: var(--prms-good);
+  font-weight: 600;
+}
+
+.prmsWorkspacePage .sapMObjStatusWarning .sapMObjStatusText,
+.prmsDashboardPage .sapMObjStatusWarning .sapMObjStatusText {
+  color: var(--prms-warning);
+  font-weight: 600;
+}
+
+.prmsWorkspacePage .sapMPIBar,
+.prmsDashboardPage .sapMPIBar {
+  border-radius: 999px;
+}
+
+@media (max-width: 48rem) {
+  .prmsLoginShell {
+    padding: 1rem;
+  }
+
+  .prmsWorkspacePage .sapMPageEnableScrolling {
+    padding: 0.75rem;
+  }
+
+  .prmsWorkspacePage .sapMTB,
+  .prmsDashboardPage .sapMTB {
+    height: auto;
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+  }
 }

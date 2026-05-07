@@ -13,24 +13,24 @@
 
         <VBox class="prmsLoginShell" renderType="Bare">
 
-          <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+          <HBox alignItems="Center" class="sapUiSmallMarginBottom prmsLoginBrand">
             <core:Icon
               src="sap-icon://employee"
               size="2rem"
               class="sapUiTinyMarginEnd" />
 
             <VBox>
-             <Title text="PRMS Login" level="H2" />
-<Text text="Performance &amp; Review Management System" />
+              <Title text="PRMS" level="H2" />
+              <Text text="Performance Review Management" />
             </VBox>
           </HBox>
 
-          <Panel class="prmsLoginCard" headerText="Sign In">
+          <Panel class="prmsLoginCard" headerText="Secure Sign In">
 
             <VBox class="sapUiMediumMargin">
 
               <Text
-                text="Use your company email ID to receive OTP and access your dashboard."
+                text="Use your company email ID to receive an OTP and access your workspace."
                 class="sapUiSmallMarginBottom" />
 
               <!-- Email -->
@@ -44,6 +44,7 @@
               <!-- Send OTP -->
               <Button
                 text="Send OTP"
+                icon="sap-icon://email"
                 press=".onSendOTP"
                 width="100%"
                 class="sapUiTinyMarginBottom" />
@@ -57,7 +58,7 @@
                 class="sapUiTinyMarginBottom" />
 
               <!-- Login -->
-             <Button text="Verify &amp; Login" type="Emphasized" press=".onLogin" class="sapUiSmallMarginTop" width="100%" />
+              <Button text="Verify and Login" icon="sap-icon://accept" type="Emphasized" press=".onLogin" class="sapUiSmallMarginTop" width="100%" />
 
               <!-- Info -->
               <MessageStrip

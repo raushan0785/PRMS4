@@ -6,10 +6,10 @@
   xmlns:form="sap.ui.layout.form"
   xmlns:mvc="sap.ui.core.mvc">
 
-  <Page title="HR Workspace" class="sapUiContentPadding">
+  <Page title="HR Workspace" class="prmsWorkspacePage sapUiContentPadding">
     <headerContent>
       <ObjectStatus text="{session>/fullName}" state="Information" />
-      <Button text="Logout" press=".onLogout" />
+      <Button text="Logout" icon="sap-icon://log" press=".onLogout" />
     </headerContent>
 
     <content>
@@ -32,13 +32,14 @@
             </VBox>
 
             <VBox>
-              <Button text="Open / Close Appraisal Cycle" press=".onToggleCycleStatus" />
+              <Button text="Open / Close Appraisal Cycle" icon="sap-icon://calendar" press=".onToggleCycleStatus" />
             </VBox>
           </HBox>
 
           <Toolbar class="sapUiSmallMarginTop">
             <Button
               text="Create Appraisal Cycle"
+              icon="sap-icon://add-calendar"
               type="{= ${view>/selectedHRSection} === 'createCycle' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
               <customData>
@@ -48,6 +49,7 @@
 
             <Button
               text="Create Employee"
+              icon="sap-icon://add-employee"
               type="{= ${view>/selectedHRSection} === 'createEmployee' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
               <customData>
@@ -57,6 +59,7 @@
 
             <Button
               text="Employees &amp; Managers"
+              icon="sap-icon://group"
               type="{= ${view>/selectedHRSection} === 'employees' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
               <customData>
@@ -66,6 +69,7 @@
 
             <Button
               text="Create / Manage OKRs"
+              icon="sap-icon://target-group"
               type="{= ${view>/selectedHRSection} === 'okrs' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
               <customData>
@@ -75,6 +79,7 @@
 
             <Button
               text="Self-Assessment Report Of All Employees"
+              icon="sap-icon://business-objects-experience"
               type="{= ${view>/selectedHRSection} === 'assessments' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
               <customData>
@@ -95,6 +100,7 @@
 
           <Button
             text="Create Cycle"
+            icon="sap-icon://add"
             type="Emphasized"
             press=".onCreateCycle"
             class="sapUiTinyMarginTop" />
@@ -133,6 +139,7 @@
           <Toolbar>
             <Button
               text="Create Employee"
+              icon="sap-icon://add-employee"
               type="Emphasized"
               press=".onCreateEmployee" />
           </Toolbar>
@@ -178,6 +185,7 @@
           <Toolbar>
             <Button
               text="Create OKR"
+              icon="sap-icon://add"
               type="Emphasized"
               press=".onCreateOKR" />
           </Toolbar>
@@ -196,7 +204,7 @@
                   <Input value="{view>title}" />
                   <TextArea value="{view>description}" rows="2" />
                   <Text text="{view>cycleText}" />
-                  <Button text="Save" press=".onSaveOKR" />
+                  <Button text="Save" icon="sap-icon://save" press=".onSaveOKR" />
                 </cells>
               </ColumnListItem>
             </items>
