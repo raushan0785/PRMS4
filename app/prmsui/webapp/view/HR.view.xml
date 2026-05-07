@@ -33,6 +33,7 @@
 
             <VBox>
               <Button text="Open / Close Appraisal Cycle" icon="sap-icon://calendar" press=".onToggleCycleStatus" />
+              <Button text="Open / Close Year-End Assessment" icon="sap-icon://performance" press=".onToggleYearEndStatus" class="sapUiTinyMarginTop" />
             </VBox>
           </HBox>
 
@@ -78,7 +79,7 @@
             </Button>
 
             <Button
-              text="Self-Assessment Report Of All Employees"
+              text="Year-End Assessment"
               icon="sap-icon://business-objects-experience"
               type="{= ${view>/selectedHRSection} === 'assessments' ? 'Emphasized' : 'Default' }"
               press=".onHRSectionSelect">
@@ -212,33 +213,29 @@
         </Panel>
 
         <Panel
-          headerText="Self-Assessment Report Of All Employees"
+          headerText="Year-End Assessment"
           visible="{= ${view>/selectedHRSection} === 'assessments' }">
           <Table items="{view>/assessments}">
             <columns>
               <Column><Text text="Employee" /></Column>
-              <Column><Text text="Assessment Type" /></Column>
-              <Column><Text text="Self-Assessment" /></Column>
+              <Column><Text text="Goal" /></Column>
+              <Column><Text text="Status" /></Column>
               <Column><Text text="Self Rating" /></Column>
-              <Column><Text text="Manager Feedback" /></Column>
               <Column><Text text="Manager Rating" /></Column>
               <Column><Text text="Final Rating" /></Column>
-              <Column><Text text="Status" /></Column>
             </columns>
 
             <items>
               <ColumnListItem>
                 <cells>
                   <Text text="{view>employeeName}" />
-                  <Text text="{view>assessmentType}" />
-                  <Text text="{view>latestSelfAssessmentText}" wrapping="true" />
-                  <Text text="{view>latestSelfRatingLabel}" />
-                  <Text text="{view>latestManagerFeedback}" wrapping="true" />
-                  <Text text="{view>managerRating}" />
-                  <Text text="{view>finalRating}" />
+                  <Text text="{view>goalTitle}" />
                   <ObjectStatus
                     text="{view>finalStatus}"
                     state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                  <Text text="{view>latestSelfRatingLabel}" />
+                  <Text text="{view>managerRatingText}" />
+                  <Text text="{= ${view>finalRating} ? ${view>finalRating} + '/5' : 'Pending' }" />
                 </cells>
               </ColumnListItem>
             </items>

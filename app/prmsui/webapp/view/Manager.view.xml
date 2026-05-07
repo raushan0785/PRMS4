@@ -75,7 +75,7 @@
             </Button>
 
             <Button
-              text="Self-Assessment Review &amp; Final Rating"
+              text="Year-End Assessment"
               icon="sap-icon://performance"
               type="{= ${view>/selectedManagerSection} === 'assessment' ? 'Emphasized' : 'Default' }"
               press=".onManagerSectionSelect">
@@ -194,15 +194,15 @@
         </Panel>
 
         <Panel
-          headerText="Self-Assessment Review &amp; Final Rating"
+          headerText="Year-End Assessment"
           visible="{= ${view>/selectedManagerSection} === 'assessment' &amp;&amp; !!${view>/selectedEmployeeId} }">
           <Table items="{view>/selectedAssessments}">
             <columns>
               <Column><Text text="Employee" /></Column>
+              <Column><Text text="Goal" /></Column>
+              <Column><Text text="Status" /></Column>
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
-              <Column><Text text="Manager Feedback" /></Column>
-              <Column><Text text="Status" /></Column>
               <Column><Text text="Actions" /></Column>
             </columns>
 
@@ -210,26 +210,25 @@
               <ColumnListItem>
                 <cells>
                   <Text text="{view>employeeName}" />
-                  <Text text="{= ${view>latestCheckInSelfRatingLabel} || ${view>selfRating} }" />
+                  <Text text="{view>goalTitle}" />
+                  <ObjectStatus
+                    text="{view>finalStatus}"
+                    state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                  <Text text="{view>latestSelfRatingLabel}" />
 
                   <RatingIndicator
                     value="{view>managerRating}"
                     maxValue="5"
                     change=".onManagerRatingChange"
-                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-
-                  <TextArea
-                    value="{view>managerComments}"
-                    rows="2"
-                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-
-                  <ObjectStatus
-                    text="{view>finalStatus}"
-                    state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                    enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
 
                   <HBox>
-                    <Button text="Save Feedback" icon="sap-icon://save" press=".onSaveAssessmentFeedback" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
-                    <Button text="Final Submit" icon="sap-icon://complete" type="Emphasized" press=".onFinalizeAssessment" class="sapUiTinyMarginBegin" enabled="{= ${view>finalStatus} !== 'Finalized' }" />
+                    <Button
+                      text="{= ${view>finalStatus} === 'Resubmitted' ? 'Submit Final Rating' : 'Submit Rating' }"
+                      icon="sap-icon://complete"
+                      type="Emphasized"
+                      press=".onFinalizeAssessment"
+                      enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
                   </HBox>
                 </cells>
               </ColumnListItem>

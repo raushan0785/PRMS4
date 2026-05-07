@@ -45,6 +45,7 @@ entity AppraisalCycle : cuid {
 
   goalsOpen   : Boolean default true;
   checkInOpen : Boolean default true;
+  yearEndOpen : Boolean default false;
   isCurrent   : Boolean default true;
 }
 
@@ -240,6 +241,7 @@ entity CheckIn : cuid {
 entity Assessment : cuid {
   employee_ID     : UUID;
   cycle_ID        : UUID;
+  goal_ID         : UUID;
   assessmentType  : String(20);
   selfRating      : Integer;
   managerRating   : Integer;
@@ -250,9 +252,13 @@ entity Assessment : cuid {
 
   finalStatus     : String(20) enum {
     Open;
+    Submitted;
+    ManagerRated;
+    Resubmitted;
     Finalized;
   };
 
   employee        : Association to Employee on employee.ID = $self.employee_ID;
+  goal            : Association to Goal on goal.ID = $self.goal_ID;
   cycle           : Association to AppraisalCycle on cycle.ID = $self.cycle_ID;
 }

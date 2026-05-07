@@ -153,10 +153,15 @@ sap.ui.define([
           }.bind(this));
 
         var aAssessments = [];
+        var mGoals = {};
+        aGoalsAll.forEach(function (oGoal) {
+          mGoals[oGoal.ID] = oGoal.title;
+        });
 
         aTeamMembers.forEach(function (oEmp) {
           var aEmpRows = aAssessAll.filter(function (oItem) {
             return oItem.employee_ID === oEmp.ID &&
+              oItem.assessmentType === "Year-End" &&
               aSelectedCycleIds.indexOf(oItem.cycle_ID) !== -1;
           });
 
@@ -167,10 +172,13 @@ sap.ui.define([
             .forEach(function (oRow) {
               aAssessments.unshift(
                 Object.assign({}, oRow, {
-                  employeeName: oEmp.name
+                  employeeName: oEmp.name,
+                  goalTitle: mGoals[oRow.goal_ID] || "Year-End Goal",
+                  latestSelfRatingLabel: this._formatSelfRating(oRow.selfRating),
+                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending"
                 })
               );
-            });
+            }.bind(this));
 
           aEmpRows
             .filter(function (oItem) {
@@ -179,10 +187,13 @@ sap.ui.define([
             .forEach(function (oRow) {
               aAssessments.push(
                 Object.assign({}, oRow, {
-                  employeeName: oEmp.name
+                  employeeName: oEmp.name,
+                  goalTitle: mGoals[oRow.goal_ID] || "Year-End Goal",
+                  latestSelfRatingLabel: this._formatSelfRating(oRow.selfRating),
+                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending"
                 })
               );
-            });
+            }.bind(this));
         });
 
         var bSelectedEmployeeExists = aTeamMembers.some(function (oEmployee) {
@@ -382,10 +393,12 @@ sap.ui.define([
       var oAssessment = oEvent.getSource().getBindingContext("view").getObject();
 
       try {
+        var bYearEnd = oAssessment.assessmentType === "Year-End";
         var oPayload = {
           employee_ID: oAssessment.employee_ID,
           cycle_ID: oAssessment.cycle_ID,
-          assessmentType: "Quarterly",
+          goal_ID: oAssessment.goal_ID || null,
+          assessmentType: bYearEnd ? "Year-End" : "Quarterly",
           managerRating: Number(oAssessment.managerRating || 0),
           selfRating: Number(
             oAssessment.latestCheckInSelfRating ||
@@ -457,12 +470,17 @@ sap.ui.define([
       }
 
       var iFinalRating = (iSelfRating + iManagerRating) / 2;
+      var bYearEnd = oAssessment.assessmentType === "Year-End";
+      var sNextStatus = bYearEnd && oAssessment.finalStatus === "Submitted"
+        ? "ManagerRated"
+        : "Finalized";
 
       try {
         var oPayload = {
           employee_ID: oAssessment.employee_ID,
           cycle_ID: oAssessment.cycle_ID,
-          assessmentType: "Quarterly",
+          goal_ID: oAssessment.goal_ID || null,
+          assessmentType: bYearEnd ? "Year-End" : "Quarterly",
           selfRating: iSelfRating,
           managerRating: iManagerRating,
           comments:
@@ -472,7 +490,7 @@ sap.ui.define([
             oAssessment.managerComments ||
             oAssessment.latestManagerComment || "",
           finalRating: Number(iFinalRating.toFixed(1)),
-          finalStatus: "Finalized"
+          finalStatus: sNextStatus
         };
 
         if (oAssessment.ID) {
@@ -481,8 +499,8 @@ sap.ui.define([
           await this.createEntity("Assessments", oPayload);
         }
 
-        this.showToast("Final rating submitted.");
-        oAssessment.finalStatus = "Finalized";
+        this.showToast(sNextStatus === "Finalized" ? "Final rating submitted." : "Manager rating submitted to employee.");
+        oAssessment.finalStatus = sNextStatus;
 
         await this._loadData();
 

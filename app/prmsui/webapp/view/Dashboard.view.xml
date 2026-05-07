@@ -248,7 +248,7 @@
                   </VBox>
                 </Panel>
 
-                <Panel headerText="Manager Feedback and Final Rating" class="sapUiSmallMarginBottom">
+                <Panel headerText="Year-End Assessment" class="sapUiSmallMarginBottom">
                   <Table items="{dashboard>/assessments}" growing="true">
                     <columns>
                       <Column><Text text="Assessment Type" /></Column>
@@ -273,7 +273,7 @@
                   </Table>
                 </Panel>
 
-                <Panel headerText="Self-Assessment" class="sapUiSmallMarginBottom">
+                <Panel headerText="Year-End Assessment Form" class="sapUiSmallMarginBottom">
                   <VBox class="sapUiMediumMargin">
                     <Text text="Rate yourself using the performance scale:" class="sapUiTinyMarginBottom" />
                     <RadioButtonGroup columns="3" select=".onSelfRatingChange">
@@ -284,7 +284,7 @@
                       <RadioButton text="Outstanding" key="5" />
                     </RadioButtonGroup>
                     <Text text="Self-Rating: {dashboard>/selfRatingText}" class="sapUiMediumMarginTop" />
-                    <Button text="Submit Self-Assessment" icon="sap-icon://paper-plane" press=".onSelfAssessment" type="Emphasized" class="sapUiMediumMarginTop" />
+                    <Button text="Submit Year-End Assessment" icon="sap-icon://paper-plane" press=".onSelfAssessment" type="Emphasized" class="sapUiMediumMarginTop" />
                   </VBox>
                 </Panel>
 

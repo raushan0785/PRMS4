@@ -70,12 +70,13 @@
             </Button>
 
             <Button
-              text="Manager Feedback and Final Rating"
-              icon="sap-icon://manager-insight"
-              type="{= ${view>/selectedEmployeeSection} === 'feedback' ? 'Emphasized' : 'Default' }"
+              text="Year-End Assessment"
+              icon="sap-icon://performance"
+              enabled="{= ${view>/stats/canSubmitYearEnd} || ${view>/stats/canResubmitYearEnd} || ${view>/stats/hasAssessment} }"
+              type="{= ${view>/selectedEmployeeSection} === 'yearEnd' ? 'Emphasized' : 'Default' }"
               press=".onEmployeeSectionSelect">
               <customData>
-                <core:CustomData key="section" value="feedback" />
+                <core:CustomData key="section" value="yearEnd" />
               </customData>
             </Button>
           </Toolbar>
@@ -292,39 +293,72 @@
         </Panel>
 
         <Panel
-          headerText="Manager Feedback &amp; Final Rating"
+          headerText="Year-End Assessment"
           class="sapUiSmallMarginBottom"
-          visible="{= ${view>/selectedEmployeeSection} === 'feedback' }">
-          <Table items="{view>/assessments}">
+          visible="{= ${view>/selectedEmployeeSection} === 'yearEnd' }">
+          <form:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <Label text="Goal" />
+            <Select
+              selectedKey="{view>/yearEndDraft/goal_ID}"
+              items="{view>/goals}"
+              enabled="{= ${view>/stats/canSubmitYearEnd} || ${view>/stats/canResubmitYearEnd} }">
+              <core:Item key="{view>ID}" text="{view>title}" />
+            </Select>
+
+            <Label text="Status" />
+            <ObjectStatus
+              text="{view>/yearEndDraft/status}"
+              state="{= ${view>/yearEndDraft/status} === 'Finalized' ? 'Success' : 'Information' }" />
+
+            <Label text="Self Rating" />
+            <Select
+              selectedKey="{view>/yearEndDraft/selfRating}"
+              enabled="{= ${view>/stats/canSubmitYearEnd} || ${view>/stats/canResubmitYearEnd} }">
+              <core:Item key="1" text="1 - Too New to Assess" />
+              <core:Item key="2" text="2 - Needs Improvement" />
+              <core:Item key="3" text="3 - Meets Expectations" />
+              <core:Item key="4" text="4 - Exceeds Expectations" />
+              <core:Item key="5" text="5 - Outstanding" />
+            </Select>
+
+            <Label text="Manager Rating" />
+            <ObjectStatus
+              text="{= ${view>/yearEndDraft/managerRating} ? ${view>/yearEndDraft/managerRating} + '/5' : 'Pending' }"
+              state="{= ${view>/yearEndDraft/managerRating} ? 'Information' : 'Warning' }" />
+          </form:SimpleForm>
+
+          <Toolbar>
+            <Button
+              text="{= ${view>/stats/canResubmitYearEnd} ? 'Resubmit Year-End Assessment' : 'Submit Year-End Assessment' }"
+              icon="sap-icon://paper-plane"
+              type="Emphasized"
+              press=".onSubmitYearEndAssessment"
+              enabled="{= ${view>/stats/canSubmitYearEnd} || ${view>/stats/canResubmitYearEnd} }" />
+          </Toolbar>
+
+          <Table items="{view>/assessments}" class="sapUiSmallMarginTop">
             <columns>
-              <Column><Text text="Type" /></Column>
+              <Column><Text text="Goal" /></Column>
+              <Column><Text text="Status" /></Column>
               <Column><Text text="Self Rating" /></Column>
-              <Column><Text text="Manager Feedback" /></Column>
               <Column><Text text="Manager Rating" /></Column>
               <Column><Text text="Final Rating" /></Column>
-              <Column><Text text="Status" /></Column>
             </columns>
 
             <items>
               <ColumnListItem>
                 <cells>
-                  <Text text="{view>assessmentType}" />
-                  <Text text="{view>latestSelfRatingLabel}" />
-                  <Text text="{view>latestManagerFeedback}" wrapping="true" />
-                  <Text text="{view>managerRating}" />
-                  <Text text="{view>finalRating}" />
+                  <Text text="{view>goalTitle}" />
                   <ObjectStatus
                     text="{view>finalStatus}"
                     state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                  <Text text="{view>latestSelfRatingLabel}" />
+                  <Text text="{view>managerRatingText}" />
+                  <Text text="{= ${view>finalRating} ? ${view>finalRating} + '/5' : 'Pending' }" />
                 </cells>
               </ColumnListItem>
             </items>
           </Table>
-
-          <Toolbar>
-            <ToolbarSpacer />
-            <Button text="Send Back Final Rating Once" press=".onSendBackRating" enabled="{view>/stats/canSendBack}" />
-          </Toolbar>
         </Panel>
 
       </VBox>

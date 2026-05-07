@@ -67,9 +67,14 @@ sap.ui.define([
 
         var aEmployees = aResults[0];
         var mEmployees = {};
+        var mGoals = {};
 
         aEmployees.forEach(function (oEmployee) {
           mEmployees[oEmployee.ID] = oEmployee.name;
+        });
+
+        (aResults[5] || []).forEach(function (oGoal) {
+          mGoals[oGoal.ID] = oGoal.title;
         });
 
         var aCycles = aResults[3];
@@ -98,7 +103,8 @@ sap.ui.define([
 
         var aAssessments = aResults[2]
           .filter(function (oAssessment) {
-            return aSelectedCycleIds.indexOf(oAssessment.cycle_ID) !== -1;
+            return oAssessment.assessmentType === "Year-End" &&
+              aSelectedCycleIds.indexOf(oAssessment.cycle_ID) !== -1;
           })
           .map(function (oAssessment) {
             var oLatestCheckIn = this._getLatestCheckInForEmployee(
@@ -109,9 +115,11 @@ sap.ui.define([
 
             return Object.assign({}, oAssessment, {
               employeeName: mEmployees[oAssessment.employee_ID] || "Unknown",
+              goalTitle: mGoals[oAssessment.goal_ID] || "Year-End Goal",
               latestSelfAssessmentText: oLatestCheckIn ? oLatestCheckIn.notes : (oAssessment.comments || ""),
               latestSelfRatingLabel: this._formatSelfRating(oLatestCheckIn ? oLatestCheckIn.selfRating : oAssessment.selfRating),
-              latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : "")
+              latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : ""),
+              managerRatingText: oAssessment.managerRating ? (oAssessment.managerRating + "/5") : "Pending"
             });
           }.bind(this));
 
@@ -361,6 +369,39 @@ okrs: aResults[1]
         }.bind(this)));
 
         this.showToast("Appraisal cycle updated.");
+        await this._loadData();
+
+      } catch (oError) {
+        this.showError(oError);
+      }
+    },
+
+    onToggleYearEndStatus: async function () {
+      var oViewModel = this.getView().getModel("view");
+      var aCycles = oViewModel.getProperty("/cycles") || [];
+      var sSelectedYear = oViewModel.getProperty("/selectedYear");
+
+      var aSelectedYearCycles = aCycles.filter(function (oCycle) {
+        return String(oCycle.year) === String(sSelectedYear);
+      });
+
+      if (!aSelectedYearCycles.length) {
+        MessageBox.error("Select a valid appraisal year.");
+        return;
+      }
+
+      var bShouldOpen = aSelectedYearCycles.every(function (oCycle) {
+        return !oCycle.yearEndOpen;
+      });
+
+      try {
+        await Promise.all(aSelectedYearCycles.map(function (oCycle) {
+          return this.patchEntity("AppraisalCycles", oCycle.ID, {
+            yearEndOpen: bShouldOpen
+          });
+        }.bind(this)));
+
+        this.showToast(bShouldOpen ? "Year-End Assessment opened." : "Year-End Assessment closed.");
         await this._loadData();
 
       } catch (oError) {
