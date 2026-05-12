@@ -222,6 +222,7 @@
               <Column><Text text="Status" /></Column>
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
+              <Column><Text text="Manager Comment" /></Column>
               <Column><Text text="Final Rating" /></Column>
             </columns>
 
@@ -235,6 +236,7 @@
                     state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                   <Text text="{view>latestSelfRatingLabel}" />
                   <Text text="{view>managerRatingText}" />
+                  <Text text="{view>managerCommentText}" wrapping="true" />
                   <Text text="{= ${view>finalRating} ? ${view>finalRating} + '/5' : 'Pending' }" />
                 </cells>
               </ColumnListItem>

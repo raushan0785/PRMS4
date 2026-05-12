@@ -165,11 +165,12 @@ sap.ui.define([
               latestSelfAssessmentText: "",
               latestSelfRatingLabel: this._formatSelfRating(oAssessment.selfRating),
               latestManagerFeedback: oAssessment.managerComments || "",
-              managerRatingText: oAssessment.managerRating ? (oAssessment.managerRating + "/5") : "Pending"
+              managerRatingText: oAssessment.managerRating ? (oAssessment.managerRating + "/5") : "Pending",
+              managerCommentText: oAssessment.managerComments || "Pending"
             });
           }.bind(this));
 
-        var oAssessment = aYearEndAssessments[0] || null;
+        var oAssessment = this._getDefaultYearEndAssessment(aGoals, aYearEndAssessments);
 
         var aDecoratedCheckIns = aCheckIns.map(function (oCheckIn) {
           return Object.assign({}, oCheckIn, {
@@ -199,9 +200,13 @@ sap.ui.define([
             canEditGoals: aSelectedYearCycles.some(function (oCycleRow) {
               return !!oCycleRow.goalsOpen;
             }),
-            canEditCheckIns: aCheckInGoals.length > 0,
-            canSubmitYearEnd: bYearEndOpen && (!oAssessment || oAssessment.finalStatus === "Open"),
-            canResubmitYearEnd: bYearEndOpen && !!(oAssessment && oAssessment.finalStatus === "ManagerRated" && (oAssessment.sendBackCount || 0) < 1),
+            canEditCheckIns: aSelectedYearCycles.some(function (oCycleRow) {
+              return !!oCycleRow.checkInOpen;
+            }),
+            canSubmitYearEnd: bYearEndOpen,
+            canResubmitYearEnd: bYearEndOpen && aYearEndAssessments.some(function (oItem) {
+              return oItem.finalStatus === "ManagerRated" && (oItem.sendBackCount || 0) < 1;
+            }),
             canSendBack: false,
             hasAssessment: !!oAssessment,
             hasFinalizedAssessment: !!(oAssessment && oAssessment.finalStatus === "Finalized")
@@ -244,8 +249,21 @@ sap.ui.define([
         goal_ID: (oAssessment && oAssessment.goal_ID) || (oGoal && oGoal.ID) || "",
         status: (oAssessment && oAssessment.finalStatus) || "Open",
         selfRating: (oAssessment && oAssessment.selfRating) || 3,
-        managerRating: (oAssessment && oAssessment.managerRating) || 0
+        managerRating: (oAssessment && oAssessment.managerRating) || 0,
+        managerComments: (oAssessment && oAssessment.managerComments) || ""
       };
+    },
+
+    _getDefaultYearEndAssessment: function (aGoals, aAssessments) {
+      var aGoalIds = (aGoals || []).map(function (oGoal) {
+        return oGoal.ID;
+      });
+
+      return (aAssessments || []).find(function (oAssessment) {
+        return oAssessment.finalStatus !== "Finalized";
+      }) || (aAssessments || []).find(function (oAssessment) {
+        return aGoalIds.indexOf(oAssessment.goal_ID) !== -1;
+      }) || null;
     },
 
     _formatSelfRating: function (iSelfRating) {
@@ -278,6 +296,19 @@ sap.ui.define([
       );
 
       await this._loadData();
+    },
+
+    onYearEndGoalChange: function (oEvent) {
+      var sGoalId = oEvent.getParameter("selectedItem").getKey();
+      var oViewModel = this.getView().getModel("view");
+      var oAssessment = (oViewModel.getProperty("/assessments") || []).find(function (oItem) {
+        return oItem.goal_ID === sGoalId;
+      });
+
+      oViewModel.setProperty("/yearEndDraft", this._getEmptyYearEndDraft(
+        oViewModel.getProperty("/goals") || [],
+        oAssessment || { goal_ID: sGoalId }
+      ));
     },
 
     onCreateGoal: async function () {
@@ -488,7 +519,9 @@ sap.ui.define([
       var aCycles = oViewModel.getProperty("/cycles") || [];
       var aAssessments = oViewModel.getProperty("/assessments") || [];
       var sSelectedYear = oViewModel.getProperty("/selectedYear");
-      var oExistingAssessment = aAssessments[0] || null;
+      var oExistingAssessment = aAssessments.find(function (oAssessment) {
+        return oAssessment.goal_ID === oDraft.goal_ID;
+      }) || null;
 
       if (!oDraft.goal_ID) {
         MessageBox.error("Select a goal for the year-end assessment.");
@@ -508,6 +541,21 @@ sap.ui.define([
         return;
       }
 
+      if (oExistingAssessment && oExistingAssessment.finalStatus === "Finalized") {
+        MessageBox.error("This goal's year-end assessment is already finalized.");
+        return;
+      }
+
+      if (oExistingAssessment && (oExistingAssessment.finalStatus === "Submitted" || oExistingAssessment.finalStatus === "Resubmitted")) {
+        MessageBox.error("This goal's year-end assessment is already with your manager.");
+        return;
+      }
+
+      if (oExistingAssessment && oExistingAssessment.finalStatus === "ManagerRated" && (oExistingAssessment.sendBackCount || 0) >= 1) {
+        MessageBox.error("This goal's one resubmission chance has already been used.");
+        return;
+      }
+
       try {
         var oPayload = {
           employee_ID: this.getSessionModel().getProperty("/employeeId"),
@@ -519,8 +567,8 @@ sap.ui.define([
           managerComments: oExistingAssessment ? (oExistingAssessment.managerComments || "") : "",
           comments: oSelectedGoal ? (oSelectedGoal.title + " | " + oSelectedGoal.status) : "",
           finalRating: Number(oExistingAssessment && oExistingAssessment.finalRating || 0),
-          finalStatus: oExistingAssessment ? "Resubmitted" : "Submitted",
-          sendBackCount: oExistingAssessment ? 1 : 0
+          finalStatus: oExistingAssessment && oExistingAssessment.finalStatus === "ManagerRated" ? "Resubmitted" : "Submitted",
+          sendBackCount: oExistingAssessment && oExistingAssessment.finalStatus === "ManagerRated" ? 1 : 0
         };
 
         if (oExistingAssessment) {
@@ -537,4 +585,4 @@ sap.ui.define([
       }
     }
   });
-});
+});  

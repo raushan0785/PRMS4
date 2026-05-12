@@ -175,7 +175,8 @@ sap.ui.define([
                   employeeName: oEmp.name,
                   goalTitle: mGoals[oRow.goal_ID] || "Year-End Goal",
                   latestSelfRatingLabel: this._formatSelfRating(oRow.selfRating),
-                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending"
+                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending",
+                  managerCommentText: oRow.managerComments || "Pending"
                 })
               );
             }.bind(this));
@@ -190,11 +191,12 @@ sap.ui.define([
                   employeeName: oEmp.name,
                   goalTitle: mGoals[oRow.goal_ID] || "Year-End Goal",
                   latestSelfRatingLabel: this._formatSelfRating(oRow.selfRating),
-                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending"
+                  managerRatingText: oRow.managerRating ? (oRow.managerRating + "/5") : "Pending",
+                  managerCommentText: oRow.managerComments || "Pending"
                 })
               );
             }.bind(this));
-        });
+        }.bind(this));
 
         var bSelectedEmployeeExists = aTeamMembers.some(function (oEmployee) {
           return oEmployee.ID === sSelectedEmployeeId;
@@ -400,6 +402,7 @@ sap.ui.define([
           goal_ID: oAssessment.goal_ID || null,
           assessmentType: bYearEnd ? "Year-End" : "Quarterly",
           managerRating: Number(oAssessment.managerRating || 0),
+          managerComments: oAssessment.managerComments || "",
           selfRating: Number(
             oAssessment.latestCheckInSelfRating ||
             oAssessment.selfRating || 0

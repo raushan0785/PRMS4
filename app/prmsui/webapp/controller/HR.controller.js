@@ -119,7 +119,8 @@ sap.ui.define([
               latestSelfAssessmentText: oLatestCheckIn ? oLatestCheckIn.notes : (oAssessment.comments || ""),
               latestSelfRatingLabel: this._formatSelfRating(oLatestCheckIn ? oLatestCheckIn.selfRating : oAssessment.selfRating),
               latestManagerFeedback: oAssessment.managerComments || (oLatestCheckIn ? oLatestCheckIn.comments : ""),
-              managerRatingText: oAssessment.managerRating ? (oAssessment.managerRating + "/5") : "Pending"
+              managerRatingText: oAssessment.managerRating ? (oAssessment.managerRating + "/5") : "Pending",
+              managerCommentText: oAssessment.managerComments || "Pending"
             });
           }.bind(this));
 

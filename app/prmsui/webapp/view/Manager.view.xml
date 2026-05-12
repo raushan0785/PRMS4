@@ -203,6 +203,7 @@
               <Column><Text text="Status" /></Column>
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
+              <Column><Text text="Manager Comment" /></Column>
               <Column><Text text="Actions" /></Column>
             </columns>
 
@@ -220,6 +221,12 @@
                     value="{view>managerRating}"
                     maxValue="5"
                     change=".onManagerRatingChange"
+                    enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
+
+                  <TextArea
+                    value="{view>managerComments}"
+                    rows="2"
+                    placeholder="Add manager comment"
                     enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
 
                   <HBox>
