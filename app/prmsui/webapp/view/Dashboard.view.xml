@@ -254,7 +254,7 @@
                       <Column><Text text="Assessment Type" /></Column>
                       <Column><Text text="Self Rating" /></Column>
                       <Column><Text text="Manager Rating" /></Column>
-                      <Column><Text text="Final Rating" /></Column>
+                      <Column><Text text="Overall Final Rating" /></Column>
                       <Column><Text text="Status" /></Column>
                       <Column><Text text="Manager Comments" /></Column>
                     </columns>
@@ -264,8 +264,14 @@
                           <Text text="{dashboard>assessmentType}" />
                           <ObjectStatus text="{= ${dashboard>selfRating} ? ${dashboard>selfRating} + '/5' : 'Pending' }" state="Information" />
                           <ObjectStatus text="{= ${dashboard>managerRating} ? ${dashboard>managerRating} + '/5' : 'Pending' }" state="Information" />
-                          <ObjectStatus text="{= ${dashboard>finalRating} ? ${dashboard>finalRating} + '/5' : 'Pending' }" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Warning' }" />
-                          <ObjectStatus text="{dashboard>finalStatus}" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                          <ObjectStatus
+                            visible="{dashboard>showOverallFinalRating}"
+                            text="{= ${dashboard>overallFinalStatus} === 'Finalized' && ${dashboard>overallFinalRating} ? ${dashboard>overallFinalRating} + '/5' : 'Pending' }"
+                            state="{= ${dashboard>overallFinalStatus} === 'Finalized' ? 'Success' : 'Warning' }" />
+                          <ObjectStatus
+                            visible="{dashboard>showOverallFinalRating}"
+                            text="{dashboard>overallFinalStatus}"
+                            state="{= ${dashboard>overallFinalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                           <Text text="{dashboard>managerComments}" wrapping="true" />
                         </cells>
                       </ColumnListItem>
@@ -359,7 +365,7 @@
                       <Column><Text text="Employee" /></Column>
                       <Column><Text text="Manager Rating" /></Column>
                       <Column><Text text="Self Rating" /></Column>
-                      <Column><Text text="Final Rating" /></Column>
+                      <Column><Text text="Overall Final Rating" /></Column>
                       <Column><Text text="Status" /></Column>
                       <Column><Text text="Action" /></Column>
                     </columns>
@@ -369,7 +375,9 @@
                           <Text text="{dashboard>employeeName}" />
                           <RatingIndicator value="{dashboard>managerRating}" maxValue="5" change=".onUpdateAssessmentRating" />
                           <Text text="{= ${dashboard>selfRating} ? ${dashboard>selfRating} + '/5' : 'Pending' }" />
-                          <Text text="{= ${dashboard>finalRating} ? ${dashboard>finalRating} + '/5' : 'Pending' }" />
+                          <Text
+                            visible="{dashboard>showOverallFinalRating}"
+                            text="{= ${dashboard>overallFinalStatus} === 'Finalized' && ${dashboard>overallFinalRating} ? ${dashboard>overallFinalRating} + '/5' : 'Pending' }" />
                           <ObjectStatus text="{dashboard>finalStatus}" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                           <Button text="Finalize" icon="sap-icon://complete" press=".onFinalizeAssessment" enabled="{= ${dashboard>finalStatus} !== 'Finalized' }" />
                         </cells>
@@ -464,7 +472,7 @@
                       <Column><Text text="Employee" /></Column>
                       <Column><Text text="Manager Rating" /></Column>
                       <Column><Text text="Self Rating" /></Column>
-                      <Column><Text text="Final Rating" /></Column>
+                      <Column><Text text="Overall Final Rating" /></Column>
                       <Column><Text text="Status" /></Column>
                     </columns>
                     <items>
@@ -473,7 +481,11 @@
                           <Text text="{dashboard>employeeName}" />
                           <RatingIndicator value="{dashboard>managerRating}" maxValue="5" enabled="false" />
                           <RatingIndicator value="{dashboard>selfRating}" maxValue="5" enabled="false" />
-                          <RatingIndicator value="{dashboard>finalRating}" maxValue="5" enabled="false" />
+                          <RatingIndicator
+                            visible="{= ${dashboard>showOverallFinalRating} && ${dashboard>overallFinalStatus} === 'Finalized' }"
+                            value="{dashboard>overallFinalRating}"
+                            maxValue="5"
+                            enabled="false" />
                           <ObjectStatus text="{dashboard>finalStatus}" state="{= ${dashboard>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                         </cells>
                       </ColumnListItem>

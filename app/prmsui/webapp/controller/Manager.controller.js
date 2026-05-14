@@ -24,7 +24,9 @@ sap.ui.define([
         selectedManagerSection: "okrs",
         selectedTeamGoals: [],
         selectedTeamCheckIns: [],
-        selectedAssessments: []
+        selectedAssessments: [],
+        overallFinalRating: 0,
+        canFinalizeOverall: false
       }), "view");
 
       this.getRouter().getRoute("manager").attachPatternMatched(this._onRouteMatched, this);
@@ -207,6 +209,37 @@ sap.ui.define([
           sSelectedEmployeeName = "";
         }
 
+        var aSelectedAssessments = aAssessments.filter(function (oAssessment) {
+          return oAssessment.employee_ID === sSelectedEmployeeId;
+        });
+
+        // Compute overall rating for the selected employee based on all
+        // goal-level manager ratings for the currently "open" year-end assessments.
+        var aOpenAssessmentsForEmployee = aSelectedAssessments.filter(function (oAssessment) {
+          return oAssessment.finalStatus === "Submitted" ||
+            oAssessment.finalStatus === "Resubmitted" ||
+            oAssessment.finalStatus === "ManagerRated";
+        });
+
+        var bAllOpenGoalsRated = aOpenAssessmentsForEmployee.length > 0 &&
+          !aOpenAssessmentsForEmployee.some(function (oAssessment) {
+            return !Number(oAssessment.managerRating || 0);
+          });
+
+        var fOverallFinalRating = bAllOpenGoalsRated
+          ? (aOpenAssessmentsForEmployee.reduce(function (sum, oAssessment) {
+            return sum + Number(oAssessment.managerRating || 0);
+          }, 0) / aOpenAssessmentsForEmployee.length)
+          : 0;
+
+        // If there is already a finalized overall rating stored, keep showing it.
+        if (!fOverallFinalRating) {
+          var oAnyFinalAssessment = aSelectedAssessments.find(function (oAssessment) {
+            return !!oAssessment.finalRating;
+          });
+          fOverallFinalRating = oAnyFinalAssessment ? Number(oAnyFinalAssessment.finalRating || 0) : 0;
+        }
+
         oViewModel.setData({
           busy: false,
           cycles: aCycles,
@@ -229,9 +262,9 @@ sap.ui.define([
           selectedTeamCheckIns: aTeamCheckIns.filter(function (oCheckIn) {
             return oCheckIn.employee_ID === sSelectedEmployeeId;
           }),
-          selectedAssessments: aAssessments.filter(function (oAssessment) {
-            return oAssessment.employee_ID === sSelectedEmployeeId;
-          })
+          selectedAssessments: aSelectedAssessments,
+          overallFinalRating: Number((fOverallFinalRating || 0).toFixed(1)),
+          canFinalizeOverall: bAllOpenGoalsRated && aOpenAssessmentsForEmployee.length > 0
         });
 
       } catch (oError) {
@@ -259,7 +292,36 @@ sap.ui.define([
       oViewModel.setProperty("/selectedAssessments", aAssessments.filter(function (oAssessment) {
         return oAssessment.employee_ID === sEmployeeId;
       }));
+
+      var aSelectedAssessments = oViewModel.getProperty("/selectedAssessments") || [];
+      var aOpenAssessmentsForEmployee = aSelectedAssessments.filter(function (oAssessment) {
+        return oAssessment.finalStatus === "Submitted" ||
+          oAssessment.finalStatus === "Resubmitted" ||
+          oAssessment.finalStatus === "ManagerRated";
+      });
+
+      var bAllOpenGoalsRated = aOpenAssessmentsForEmployee.length > 0 &&
+        !aOpenAssessmentsForEmployee.some(function (oAssessment) {
+          return !Number(oAssessment.managerRating || 0);
+        });
+
+      var fOverallFinalRating = bAllOpenGoalsRated
+        ? (aOpenAssessmentsForEmployee.reduce(function (sum, oAssessment) {
+          return sum + Number(oAssessment.managerRating || 0);
+        }, 0) / aOpenAssessmentsForEmployee.length)
+        : 0;
+
+      if (!fOverallFinalRating) {
+        var oAnyFinalAssessment = aSelectedAssessments.find(function (oAssessment) {
+          return !!oAssessment.finalRating;
+        });
+        fOverallFinalRating = oAnyFinalAssessment ? Number(oAnyFinalAssessment.finalRating || 0) : 0;
+      }
+
+      oViewModel.setProperty("/overallFinalRating", Number((fOverallFinalRating || 0).toFixed(1)));
+      oViewModel.setProperty("/canFinalizeOverall", bAllOpenGoalsRated && aOpenAssessmentsForEmployee.length > 0);
     },
+
 
     onTeamMemberPress: function (oEvent) {
       var oEmployee = oEvent.getSource().getBindingContext("view").getObject();
@@ -371,17 +433,11 @@ sap.ui.define([
           employeeAcknowledged: false
         });
 
-        await this.createEntity("Assessments", {
-          employee_ID: oCheckIn.employee_ID,
-          cycle_ID: oCheckIn.cycle_ID,
-          assessmentType: "Quarterly",
-          selfRating: oCheckIn.selfRating || 0,
-          managerRating: 0,
-          managerComments: oCheckIn.comments || "",
-          comments: oCheckIn.notes || "",
-          finalRating: 0,
-          finalStatus: "Open"
-        });
+        if (oCheckIn.goal_ID) {
+          await this.patchEntity("Goals", oCheckIn.goal_ID, {
+            checkInClosed: true
+          });
+        }
 
         this.showToast("Comment saved.");
         await this._loadData();
@@ -395,19 +451,45 @@ sap.ui.define([
       var oAssessment = oEvent.getSource().getBindingContext("view").getObject();
 
       try {
-        var bYearEnd = oAssessment.assessmentType === "Year-End";
+        // Check if this is a second submission (employee has resubmitted)
+        var bIsSecondSubmission = (oAssessment.sendBackCount || 0) >= 1;
+        
+        if (bIsSecondSubmission) {
+          MessageBox.warning(
+            "Submitting this rating will finalize the assessment and it cannot be changed afterward.",
+            {
+              onClose: (sAction) => {
+                if (sAction === MessageBox.Action.OK) {
+                  this._doManagerRatingChange(oAssessment);
+                }
+              }
+            }
+          );
+          return;
+        }
+
+        this._doManagerRatingChange(oAssessment);
+      } catch (oError) {
+        this.showError(oError);
+      }
+    },
+
+    _doManagerRatingChange: async function (oAssessment) {
+      try {
+        var sFinalStatus = oAssessment.finalStatus || "Open";
+        if (sFinalStatus !== "Finalized" && Number(oAssessment.managerRating || 0) > 0) {
+          sFinalStatus = "ManagerRated";
+        }
+
         var oPayload = {
           employee_ID: oAssessment.employee_ID,
           cycle_ID: oAssessment.cycle_ID,
           goal_ID: oAssessment.goal_ID || null,
-          assessmentType: bYearEnd ? "Year-End" : "Quarterly",
+          assessmentType: "Year-End",
           managerRating: Number(oAssessment.managerRating || 0),
           managerComments: oAssessment.managerComments || "",
-          selfRating: Number(
-            oAssessment.latestCheckInSelfRating ||
-            oAssessment.selfRating || 0
-          ),
-          finalStatus: oAssessment.finalStatus || "Open"
+          selfRating: Number(oAssessment.selfRating || 0),
+          finalStatus: sFinalStatus
         };
 
         if (oAssessment.ID) {
@@ -424,89 +506,53 @@ sap.ui.define([
       }
     },
 
-    onSaveAssessmentFeedback: async function (oEvent) {
-      var oAssessment = oEvent.getSource().getBindingContext("view").getObject();
+    onFinalizeOverallAssessment: async function () {
+      var oViewModel = this.getView().getModel("view");
+      var aAssessments = oViewModel.getProperty("/selectedAssessments") || [];
+      var aOpenAssessments = aAssessments.filter(function (oAssessment) {
+        return oAssessment.finalStatus === "Submitted" ||
+          oAssessment.finalStatus === "Resubmitted" ||
+          oAssessment.finalStatus === "ManagerRated";
+      });
 
-      try {
-        var oPayload = {
-          employee_ID: oAssessment.employee_ID,
-          cycle_ID: oAssessment.cycle_ID,
-          assessmentType: "Quarterly",
-          selfRating: Number(
-            oAssessment.latestCheckInSelfRating ||
-            oAssessment.selfRating || 0
-          ),
-          managerRating: Number(oAssessment.managerRating || 0),
-          managerComments: oAssessment.managerComments || "",
-          finalStatus: oAssessment.finalStatus || "Open"
-        };
-
-        if (oAssessment.ID) {
-          await this.patchEntity("Assessments", oAssessment.ID, oPayload);
-        } else {
-          await this.createEntity("Assessments", oPayload);
-        }
-
-        this.showToast("Manager feedback saved.");
-        await this._loadData();
-
-      } catch (oError) {
-        this.showError(oError);
-      }
-    },
-
-    onFinalizeAssessment: async function (oEvent) {
-      var oAssessment = oEvent.getSource().getBindingContext("view").getObject();
-
-      var iSelfRating = Number(
-        oAssessment.latestCheckInSelfRating ||
-        oAssessment.selfRating || 0
-      );
-
-      var iManagerRating = Number(
-        oAssessment.managerRating || 0
-      );
-
-      if (!iManagerRating) {
-        MessageBox.error("Add the manager rating before final submission.");
+      if (!aOpenAssessments.length) {
+        MessageBox.error("No submitted year-end assessments are available for final rating.");
         return;
       }
 
-      var iFinalRating = (iSelfRating + iManagerRating) / 2;
-      var bYearEnd = oAssessment.assessmentType === "Year-End";
-      var sNextStatus = bYearEnd && oAssessment.finalStatus === "Submitted"
-        ? "ManagerRated"
-        : "Finalized";
+      var bMissingManagerRating = aOpenAssessments.some(function (oAssessment) {
+        return !Number(oAssessment.managerRating || 0);
+      });
+
+      if (bMissingManagerRating) {
+        MessageBox.error("Add manager rating for each goal before submitting the overall final rating.");
+        return;
+      }
+
+      // Overall final rating is computed from all goal-level manager ratings.
+      var fOverallFinalRating = aOpenAssessments.reduce(function (sum, oAssessment) {
+        return sum + Number(oAssessment.managerRating || 0);
+      }, 0) / aOpenAssessments.length;
+      var iFinalRating = Number(fOverallFinalRating.toFixed(1));
 
       try {
-        var oPayload = {
-          employee_ID: oAssessment.employee_ID,
-          cycle_ID: oAssessment.cycle_ID,
-          goal_ID: oAssessment.goal_ID || null,
-          assessmentType: bYearEnd ? "Year-End" : "Quarterly",
-          selfRating: iSelfRating,
-          managerRating: iManagerRating,
-          comments:
-            oAssessment.latestCheckInNotes ||
-            oAssessment.comments || "",
-          managerComments:
-            oAssessment.managerComments ||
-            oAssessment.latestManagerComment || "",
-          finalRating: Number(iFinalRating.toFixed(1)),
-          finalStatus: sNextStatus
-        };
+        await Promise.all(aOpenAssessments.map(function (oAssessment) {
+          return this.patchEntity("Assessments", oAssessment.ID, {
+            employee_ID: oAssessment.employee_ID,
+            cycle_ID: oAssessment.cycle_ID,
+            goal_ID: oAssessment.goal_ID || null,
+            assessmentType: "Year-End",
+            selfRating: Number(oAssessment.selfRating || 0),
+            managerRating: Number(oAssessment.managerRating || 0),
+            comments: oAssessment.comments || "",
+            managerComments: oAssessment.managerComments || "",
+            finalRating: iFinalRating,
+            finalStatus: "Finalized"
+          });
+        }.bind(this)));
 
-        if (oAssessment.ID) {
-          await this.patchEntity("Assessments", oAssessment.ID, oPayload);
-        } else {
-          await this.createEntity("Assessments", oPayload);
-        }
-
-        this.showToast(sNextStatus === "Finalized" ? "Final rating submitted." : "Manager rating submitted to employee.");
-        oAssessment.finalStatus = sNextStatus;
-
+        this.showToast("Overall final rating submitted.");
         await this._loadData();
-
       } catch (oError) {
         this.showError(oError);
       }

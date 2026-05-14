@@ -169,7 +169,6 @@
               <Column><Text text="Employee" /></Column>
               <Column><Text text="Goal" /></Column>
               <Column><Text text="Focus Area" /></Column>
-              <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Progress" /></Column>
               <Column><Text text="Employee Notes" /></Column>
               <Column><Text text="Manager Comment" /></Column>
@@ -182,7 +181,6 @@
                   <Text text="{view>employeeName}" />
                   <Text text="{view>goalTitle}" />
                   <Text text="{view>focusArea}" />
-                  <Text text="{view>selfRatingLabel}" />
                   <Text text="{= ${view>progress} + '%' }" />
                   <Text text="{view>notes}" wrapping="true" />
                   <TextArea value="{view>comments}" rows="2" />
@@ -196,6 +194,21 @@
         <Panel
           headerText="Year-End Assessment"
           visible="{= ${view>/selectedManagerSection} === 'assessment' &amp;&amp; !!${view>/selectedEmployeeId} }">
+          <Toolbar>
+            <Title text="Overall Final Rating" level="H4" />
+            <RatingIndicator
+              value="{view>/overallFinalRating}"
+              maxValue="5" />
+            <Text text="Rating is based on all manager goal ratings." class="sapUiTinyMarginBegin" />
+            <ToolbarSpacer />
+            <Button
+              text="Submit Overall Final Rating"
+              icon="sap-icon://complete"
+              type="Emphasized"
+              enabled="{view>/canFinalizeOverall}"
+              press=".onFinalizeOverallAssessment" />
+          </Toolbar>
+
           <Table items="{view>/selectedAssessments}">
             <columns>
               <Column><Text text="Employee" /></Column>
@@ -204,7 +217,6 @@
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
               <Column><Text text="Manager Comment" /></Column>
-              <Column><Text text="Actions" /></Column>
             </columns>
 
             <items>
@@ -221,22 +233,13 @@
                     value="{view>managerRating}"
                     maxValue="5"
                     change=".onManagerRatingChange"
-                    enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
+                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
 
                   <TextArea
                     value="{view>managerComments}"
                     rows="2"
                     placeholder="Add manager comment"
-                    enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
-
-                  <HBox>
-                    <Button
-                      text="{= ${view>finalStatus} === 'Resubmitted' ? 'Submit Final Rating' : 'Submit Rating' }"
-                      icon="sap-icon://complete"
-                      type="Emphasized"
-                      press=".onFinalizeAssessment"
-                      enabled="{= ${view>finalStatus} === 'Submitted' || ${view>finalStatus} === 'Resubmitted' }" />
-                  </HBox>
+                    enabled="{= ${view>finalStatus} !== 'Finalized' }" />
                 </cells>
               </ColumnListItem>
             </items>

@@ -223,7 +223,7 @@
               <Column><Text text="Self Rating" /></Column>
               <Column><Text text="Manager Rating" /></Column>
               <Column><Text text="Manager Comment" /></Column>
-              <Column><Text text="Final Rating" /></Column>
+              <Column><Text text="Overall Final Rating" /></Column>
             </columns>
 
             <items>
@@ -232,12 +232,15 @@
                   <Text text="{view>employeeName}" />
                   <Text text="{view>goalTitle}" />
                   <ObjectStatus
-                    text="{view>finalStatus}"
-                    state="{= ${view>finalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
+                    visible="{view>showOverallFinalRating}"
+                    text="{view>overallFinalStatus}"
+                    state="{= ${view>overallFinalStatus} === 'Finalized' ? 'Success' : 'Information' }" />
                   <Text text="{view>latestSelfRatingLabel}" />
                   <Text text="{view>managerRatingText}" />
                   <Text text="{view>managerCommentText}" wrapping="true" />
-                  <Text text="{= ${view>finalRating} ? ${view>finalRating} + '/5' : 'Pending' }" />
+                  <Text
+                    visible="{view>showOverallFinalRating}"
+                    text="{= ${view>overallFinalStatus} === 'Finalized' && ${view>overallFinalRating} ? ${view>overallFinalRating} + '/5' : 'Pending' }" />
                 </cells>
               </ColumnListItem>
             </items>

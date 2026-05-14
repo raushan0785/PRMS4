@@ -316,17 +316,65 @@ sap.ui.define([
       var sAssessmentId = oAssessmentData.ID;
 
       try {
-        var iManagerRating = oAssessmentData.managerRating || 0;
-        var iSelfRating = oAssessmentData.selfRating || 0;
-        var iFinalRating = (iManagerRating + iSelfRating) / 2;
+        // For year-end assessments, manager should get ONE overall final rating.
+        // Compute it from the average of all goal-level manager ratings for that employee+cycle.
+        if (oAssessmentData.assessmentType === "Year-End") {
+          var oDashboardModel = this.getView().getModel("dashboard");
+          var aAllAssessments = oDashboardModel.getProperty("/assessments") || [];
 
-        await this._patchEntity("Assessments", sAssessmentId, {
-          finalRating: Number(iFinalRating.toFixed(1)),
-          finalStatus: "Finalized"
-        });
+          var aYearEndAssessments = aAllAssessments.filter(function (oAssessment) {
+            return oAssessment.assessmentType === "Year-End" &&
+              oAssessment.employee_ID === oAssessmentData.employee_ID &&
+              String(oAssessment.cycle_ID) === String(oAssessmentData.cycle_ID);
+          });
 
-        MessageToast.show("Assessment finalized with rating: " + iFinalRating.toFixed(1));
-        await this._loadDashboardData();
+          if (!aYearEndAssessments.length) {
+            MessageBox.error("No year-end assessments found to finalize.");
+            return;
+          }
+
+          var bMissingManagerRating = aYearEndAssessments.some(function (oAssessment) {
+            return !Number(oAssessment.managerRating || 0);
+          });
+
+          if (bMissingManagerRating) {
+            MessageBox.error("Add manager rating for each goal before submitting the overall final rating.");
+            return;
+          }
+
+          var fOverallFinalRating = aYearEndAssessments.reduce(function (sum, oAssessment) {
+            return sum + Number(oAssessment.managerRating || 0);
+          }, 0) / aYearEndAssessments.length;
+
+          var iFinalRating = Number(fOverallFinalRating.toFixed(1));
+
+          // Avoid editing already-finalized rows (service may reject).
+          var aToPatch = aYearEndAssessments.filter(function (oAssessment) {
+            return oAssessment.finalStatus !== "Finalized";
+          });
+
+          await Promise.all(aToPatch.map(function (oAssessment) {
+            return this._patchEntity("Assessments", oAssessment.ID, {
+              finalRating: iFinalRating,
+              finalStatus: "Finalized"
+            });
+          }.bind(this)));
+
+          MessageToast.show("Year-End finalized with overall rating: " + iFinalRating.toFixed(1));
+          await this._loadDashboardData();
+        } else {
+          var iManagerRating = oAssessmentData.managerRating || 0;
+          var iSelfRating = oAssessmentData.selfRating || 0;
+          var iFinalRating = (iManagerRating + iSelfRating) / 2;
+
+          await this._patchEntity("Assessments", sAssessmentId, {
+            finalRating: Number(iFinalRating.toFixed(1)),
+            finalStatus: "Finalized"
+          });
+
+          MessageToast.show("Assessment finalized with rating: " + iFinalRating.toFixed(1));
+          await this._loadDashboardData();
+        }
       } catch (oError) {
         MessageBox.error("Failed to finalize assessment: " + this._extractErrorMessage(oError));
       }

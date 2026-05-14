@@ -124,6 +124,59 @@ sap.ui.define([
             });
           }.bind(this));
 
+        // For Year-End, show ONLY one overall final rating per employee per cycle:
+        // computed from the average of all goal-level managerRating values.
+        var mOverallByKey = {};
+        var mGroups = {};
+
+        aAssessments.forEach(function (oAssessment) {
+          var sKey = String(oAssessment.employee_ID) + "|" + String(oAssessment.cycle_ID);
+          if (!mGroups[sKey]) mGroups[sKey] = [];
+          mGroups[sKey].push(oAssessment);
+        });
+
+        Object.keys(mGroups).forEach(function (sKey) {
+          var aItems = mGroups[sKey] || [];
+          var bAllGoalsHaveManagerRating = aItems.length > 0 &&
+            !aItems.some(function (oItem) {
+              return !Number(oItem.managerRating || 0);
+            });
+
+          var fOverallFinalRating = bAllGoalsHaveManagerRating
+            ? (aItems.reduce(function (sum, oItem) {
+              return sum + Number(oItem.managerRating || 0);
+            }, 0) / aItems.length)
+            : 0;
+
+          var bAllFinalized = aItems.length > 0 &&
+            aItems.every(function (oItem) {
+              return oItem.finalStatus === "Finalized";
+            });
+
+          mOverallByKey[sKey] = {
+            overallFinalRating: Number((fOverallFinalRating || 0).toFixed(1)),
+            overallFinalStatus: bAllFinalized ? "Finalized" : "Open"
+          };
+        });
+
+        var mShownOverall = {};
+        aAssessments = aAssessments.map(function (oAssessment) {
+          var sKey = String(oAssessment.employee_ID) + "|" + String(oAssessment.cycle_ID);
+          var oOverall = mOverallByKey[sKey] || {
+            overallFinalRating: 0,
+            overallFinalStatus: "Open"
+          };
+
+          var bShow = !mShownOverall[sKey];
+          if (bShow) mShownOverall[sKey] = true;
+
+          return Object.assign({}, oAssessment, {
+            overallFinalRating: oOverall.overallFinalRating,
+            overallFinalStatus: oOverall.overallFinalStatus,
+            showOverallFinalRating: bShow
+          });
+        });
+
         oViewModel.setData({
           busy: false,
           cycles: aCycles,
